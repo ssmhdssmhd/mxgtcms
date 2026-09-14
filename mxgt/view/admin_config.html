@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>沫兮官替官解系统 - 插件配置</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #f5f6f8; font-family: "Microsoft YaHei", Arial, sans-serif; color: #333; padding: 20px; }
+    .panel { background: #fff; border: 1px solid #e6e6e6; border-radius: 4px; overflow: hidden; }
+    .panel-hd { padding: 12px 20px; border-bottom: 1px solid #f2f2f2; font-size: 16px; font-weight: bold; }
+    .panel-bd { padding: 20px; }
+    .form-item { margin-bottom: 18px; }
+    .form-item .label { display: block; font-size: 14px; margin-bottom: 6px; }
+    .form-item .tip { font-size: 12px; color: #999; margin-top: 6px; line-height: 1.6; }
+    .input, .select, .textarea {
+        width: 100%; max-width: 520px; padding: 8px 10px; border: 1px solid #dcdfe6;
+        border-radius: 3px; font-size: 14px; background: #fff; outline: none;
+    }
+    .input:focus, .select:focus, .textarea:focus { border-color: #1E9FFF; }
+    .textarea { height: 90px; resize: vertical; }
+    .btn { display: inline-block; padding: 8px 30px; border: none; border-radius: 3px; font-size: 14px; cursor: pointer; text-decoration: none; color: #fff; background: #1E9FFF; }
+    .btn:hover { opacity: 0.85; }
+    .btn-back { background: #909399; margin-left: 10px; }
+</style>
+</head>
+<body>
+
+<div class="panel">
+    <div class="panel-hd">插件配置</div>
+    <div class="panel-bd">
+        <form method="post" action="{:mac_url('addons/mxgt/admin/config')}">
+            {foreach name="configList" item="item"}
+            <div class="form-item">
+                <label class="label">{$item.title}</label>
+                {switch name="item.type"}
+                {case value="select"}
+                <select name="config[{$item.name}]" class="select">
+                    {foreach name="item.options" item="opt" key="optKey"}
+                    <option value="{$optKey}" {if condition="$item['value'] eq $optKey"}selected{/if}>{$opt}</option>
+                    {/foreach}
+                </select>
+                {/case}
+                {case value="textarea"}
+                <textarea name="config[{$item.name}]" class="textarea">{$item.value}</textarea>
+                {/case}
+                {case value="number"}
+                <input type="number" name="config[{$item.name}]" class="input" value="{$item.value}">
+                {/case}
+                {default /}
+                <input type="text" name="config[{$item.name}]" class="input" value="{$item.value}">
+                {/switch}
+                {if condition="!empty($item['tip'])"}<div class="tip">{$item.tip}</div>{/if}
+            </div>
+            {/foreach}
+            <div style="margin-top: 10px;">
+                <button type="submit" class="btn">保存配置</button>
+                <a class="btn btn-back" href="{:mac_url('addons/mxgt/admin/index')}">返回首页</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>
