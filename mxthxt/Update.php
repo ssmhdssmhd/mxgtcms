@@ -34,11 +34,13 @@ class MxthxtUpdate
 
     /**
      * 检查更新
+     * 优先使用 GitHub Releases 发行版中上传的更新包资产（asset）；
+     * 未匹配到资产时回退到源码 zip（zipball）。
      * @param string $localVersion 本地插件版本号，如 v0.0.1
      * @param string $source       更新源：github / mirror / custom
      * @param string $repo         GitHub 仓库，格式 用户名/仓库名
      * @param string $customUrl    自定义更新接口地址
-     * @return array code:1成功 0失败; has_update; latest_version; zipball_url; msg
+     * @return array code:1成功 0失败; has_update; latest_version; download_url; zipball_url; asset_name; msg
      */
     public function check($localVersion = '', $source = 'mirror', $repo = '', $customUrl = '')
     {
@@ -60,12 +62,44 @@ class MxthxtUpdate
         $latestVersion = ltrim(trim($data['tag_name']), 'vV');
         $compare = $this->compareVersion($latestVersion, ltrim($localVersion, 'vV'));
 
+        // 在 Release 资产中匹配更新包 zip（优先 mxgtcms 前缀，其次 mxgt 前缀）
+        $zipball = isset($data['zipball_url']) ? (string) $data['zipball_url'] : '';
+        $downloadUrl = '';
+        $assetName = '';
+        $prefixes = array(
+            isset($this->config['asset_name_prefix']) ? (string) $this->config['asset_name_prefix'] : 'mxgtcms',
+            'mxgt',
+        );
+        $assets = isset($data['assets']) && is_array($data['assets']) ? $data['assets'] : [];
+        foreach ($assets as $a) {
+            if (!is_array($a) || empty($a['name']) || empty($a['browser_download_url'])) {
+                continue;
+            }
+            $name = (string) $a['name'];
+            if (!preg_match('/\.zip$/i', $name)) {
+                continue;
+            }
+            foreach ($prefixes as $p) {
+                if ($p !== '' && strpos($name, $p) === 0) {
+                    $downloadUrl = (string) $a['browser_download_url'];
+                    $assetName = $name;
+                    break 2;
+                }
+            }
+        }
+        // 未匹配到发行版资产时回退到源码 zip
+        if ($downloadUrl === '' && !empty($this->config['fallback_zipball'])) {
+            $downloadUrl = $zipball;
+        }
+
         return [
             'code' => 1,
             'has_update' => $compare > 0,
             'latest_version' => 'v' . $latestVersion,
             'local_version' => $localVersion,
-            'zipball_url' => isset($data['zipball_url']) ? (string) $data['zipball_url'] : '',
+            'download_url' => $downloadUrl,
+            'zipball_url' => $zipball,
+            'asset_name' => $assetName,
             'msg' => $compare > 0 ? '发现新版本 v' . $latestVersion : '当前已是最新版本',
         ];
     }
@@ -435,6 +469,6 @@ class MxthxtUpdate
      */
     protected function fail($msg)
     {
-        return ['code' => 0, 'has_update' => false, 'latest_version' => '', 'zipball_url' => '', 'msg' => $msg];
+        return ['code' => 0, 'has_update' => false, 'latest_version' => '', 'download_url' => '', 'zipball_url' => '', 'asset_name' => '', 'msg' => $msg];
     }
 }

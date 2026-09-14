@@ -156,8 +156,11 @@ class Admin extends Controller
             $this->error('当前已是最新版本：' . $localVersion);
         }
 
-        // 2. 下载更新包
-        $zipballUrl = isset($result['zipball_url']) ? $result['zipball_url'] : '';
+        // 2. 下载更新包（优先发行版资产，未配置时回退源码 zip）
+        $zipballUrl = isset($result['download_url']) ? $result['download_url'] : '';
+        if ($zipballUrl === '') {
+            $zipballUrl = isset($result['zipball_url']) ? $result['zipball_url'] : '';
+        }
         $dl = $update->download($zipballUrl, $source);
         if (empty($dl['code'])) {
             $this->error(isset($dl['msg']) ? $dl['msg'] : '更新包下载失败');
