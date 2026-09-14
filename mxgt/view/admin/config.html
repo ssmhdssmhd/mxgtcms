@@ -22,9 +22,39 @@
     .btn { display: inline-block; padding: 8px 30px; border: none; border-radius: 3px; font-size: 14px; cursor: pointer; text-decoration: none; color: #fff; background: #1E9FFF; }
     .btn:hover { opacity: 0.85; }
     .btn-back { background: #909399; margin-left: 10px; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 3px; font-size: 12px; color: #fff; }
+    .badge-ok { background: #5FB878; }
+    .badge-warn { background: #FFB800; }
+    .badge-error { background: #FF5722; }
+    .label { color: #888; margin-right: 10px; }
 </style>
 </head>
 <body>
+
+<div class="panel">
+    <div class="panel-hd">在线更新</div>
+    <div class="panel-bd">
+        <div class="info-grid" style="display:flex;flex-wrap:wrap;margin-bottom:6px;">
+            <div class="info-item" style="width:50%;padding:8px 0;font-size:14px;"><span class="label" style="color:#888;margin-right:10px;">本地版本</span>v{$vinfo.local_version|default='0.0.3'}</div>
+            <div class="info-item" style="width:50%;padding:8px 0;font-size:14px;"><span class="label" style="color:#888;margin-right:10px;">远程版本</span>
+                {if condition="$vinfo.ok eq 1"}v{$vinfo.remote_version}{else /}<span style="color:#FF5722;">{$vinfo.msg}</span>{/if}
+            </div>
+            <div class="info-item" style="width:50%;padding:8px 0;font-size:14px;"><span class="label" style="color:#888;margin-right:10px;">状态</span>
+                {if condition="$vinfo.ok eq 1"}
+                    {if condition="$vinfo.has_update eq 1"}<span class="badge badge-warn">发现新版本</span>{else /}<span class="badge badge-ok">已是最新</span>{/if}
+                {else /}<span class="badge badge-error">检查失败</span>{/if}
+            </div>
+            <div class="info-item" style="width:50%;padding:8px 0;font-size:14px;"><span class="label" style="color:#888;margin-right:10px;">检查时间</span>{$vinfo.time|date='Y-m-d H:i:s',###}</div>
+        </div>
+        <div style="margin-top: 10px;">
+            <a class="btn" href="{:addon_url('mxgt/admin/config', ['check' => 1])}">检查更新</a>
+            {if condition="$vinfo.has_update eq 1"}
+            <a class="btn btn-green" href="{:addon_url('mxgt/admin/doUpdate')}" onclick="return confirm('确定执行在线更新吗？更新前会自动备份当前代码。');">在线更新</a>
+            {/if}
+        </div>
+        <div class="tip" style="font-size:12px;color:#999;margin-top:8px;">在线更新将从配置的更新源下载最新代码并覆盖 addons/mxgt 与 mxthxt，自动保留配置与启用状态。</div>
+    </div>
+</div>
 
 <div class="panel">
     <div class="panel-hd">插件配置</div>

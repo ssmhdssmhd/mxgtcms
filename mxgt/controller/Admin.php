@@ -87,6 +87,8 @@ class Admin extends Controller
         $this->assign('installed_at', $installedAt);
         $this->assign('update_core_exists', $updateCoreExists);
         $this->assign('update_source', isset($cfg['update_source']) ? $cfg['update_source'] : '');
+        // 版本对比信息（本地 vs 远程，带缓存）
+        $this->assign('vinfo', $this->cachedVersionCheck());
         return $this->fetch('admin/index');
     }
 
@@ -119,6 +121,8 @@ class Admin extends Controller
             $this->success('配置保存成功', addon_url('mxgt/admin/config'));
         }
 
+        $force = intval($this->request->get('check', 0));
+        $this->assign('vinfo', $this->cachedVersionCheck($force === 1));
         $this->assign('config', get_addon_fullconfig('mxgt'));
         return $this->fetch('admin/config');
     }
@@ -169,6 +173,11 @@ class Admin extends Controller
         \think\Cache::rm('addons');
         \think\Cache::rm('hooks');
         \think\addons\Service::refresh();
+        // 5. 清除版本检查缓存
+        $checkCache = ROOT_PATH . 'runtime/mxthxt/check_cache.json';
+        if (is_file($checkCache)) {
+            @unlink($checkCache);
+        }
 
         $this->success('在线更新完成（' . $result['latest_version'] . '）：' . $ap['msg']);
     }
@@ -197,10 +206,69 @@ class Admin extends Controller
 
         if (isset($result['code']) && $result['code'] === 1) {
             if (!empty($result['has_update'])) {
-                $this->error('发现新版本：' . $result['latest_version'] . '，当前版本：' . $localVersion . '，在线下载升级将在后续版本开放');
+                $this->error('发现新版本：' . $result['latest_version'] . '，当前版本：' . $localVersion . '，请到「插件配置 → 在线更新」执行升级');
             }
             $this->success('当前已是最新版本：' . $localVersion);
         }
         $this->error(isset($result['msg']) ? $result['msg'] : '检查更新失败，请稍后重试');
+    }
+
+    /**
+     * 获取版本对比信息（本地 vs 远程）
+     * 远程检查结果缓存 10 分钟，避免每次打开页面都请求更新源；
+     * 传入 $force=true 强制重新检查。
+     * @param bool $force
+     * @return array ok:检查是否成功; local_version; remote_version; has_update; msg; time
+     */
+    protected function cachedVersionCheck($force = false)
+    {
+        $cacheFile = ROOT_PATH . 'runtime/mxthxt/check_cache.json';
+        $ttl = 600;
+
+        if (!$force && is_file($cacheFile) && (time() - @filemtime($cacheFile)) < $ttl) {
+            $cached = json_decode(@file_get_contents($cacheFile), true);
+            if (is_array($cached)) {
+                return $cached;
+            }
+        }
+
+        $info = get_addon_info('mxgt');
+        $localVersion = isset($info['version']) ? $info['version'] : '';
+        $cfg = get_addon_config('mxgt');
+        $source = isset($cfg['update_source']) ? $cfg['update_source'] : 'mirror';
+        $repo = isset($cfg['github_repo']) ? $cfg['github_repo'] : '';
+        $customUrl = isset($cfg['update_custom_url']) ? $cfg['update_custom_url'] : '';
+
+        $data = [
+            'ok' => 0,
+            'local_version' => $localVersion,
+            'remote_version' => '',
+            'has_update' => 0,
+            'msg' => '未检测到云端更新组件（mxthxt）',
+            'time' => time(),
+        ];
+
+        $updateCoreFile = ROOT_PATH . 'mxthxt' . DS . 'Update.php';
+        if (is_file($updateCoreFile)) {
+            require_once $updateCoreFile;
+            try {
+                $update = new \MxthxtUpdate();
+                $result = $update->check($localVersion, $source, $repo, $customUrl);
+                if (isset($result['code']) && $result['code'] === 1) {
+                    $data['ok'] = 1;
+                    $data['remote_version'] = isset($result['latest_version']) ? $result['latest_version'] : '';
+                    $data['has_update'] = !empty($result['has_update']) ? 1 : 0;
+                    $data['msg'] = isset($result['msg']) ? $result['msg'] : '';
+                } else {
+                    $data['msg'] = isset($result['msg']) ? $result['msg'] : '检查更新失败';
+                }
+            } catch (\Throwable $e) {
+                $data['msg'] = '检查更新异常：' . $e->getMessage();
+            }
+        }
+
+        @mkdir(ROOT_PATH . 'runtime/mxthxt', 0755, true);
+        @file_put_contents($cacheFile, json_encode($data, JSON_UNESCAPED_UNICODE));
+        return $data;
     }
 }

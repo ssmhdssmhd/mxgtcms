@@ -34,6 +34,11 @@
             <div class="info-item"><span class="label">插件标识</span>mxgt</div>
             <div class="info-item">
                 <span class="label">当前版本</span>v{$version|default='0.0.1'}
+                {if condition="$vinfo.ok eq 1"}
+                    <span style="font-size:12px;color:#999;">（远程：v{$vinfo.remote_version}
+                    {if condition="$vinfo.has_update eq 1"}<span class="badge badge-warn">可更新</span>{else /}<span class="badge badge-ok">最新</span>{/if}）
+                    </span>
+                {/if}
             </div>
             <div class="info-item">
                 <span class="label">运行状态</span>
