@@ -1,17 +1,22 @@
 <?php
 /**
- * 沫兮官替官解系统 - 云端更新核心（骨架）
+ * 沫兮官替官解系统 - 云端更新核心
  * 本文件位于苹果CMS根目录/mxthxt/Update.php
  *
  * 职责：
- * 1. check()      检查远端最新版本，与本地版本对比；
- * 2. download()   下载更新包（后续迭代实现）；
- * 3. apply()      解压并覆盖更新（后续迭代实现）。
+ * 1. check()    检查远端最新版本，与本地版本对比，并返回更新包下载地址；
+ * 2. download() 下载更新包（GitHub 官方源 / 国内镜像 / 自定义源）；
+ * 3. apply()    解压更新包，备份现有代码后覆盖 addons/mxgt 与 mxthxt，
+ *               并保留站长的配置与插件启用状态。
+ *
+ * 更新包约定：zip 内包含 mxgt/（含 info.ini）与 mxthxt/（含 Update.php）目录，
+ * 与 GitHub 仓库 tag 的 archive zip（{repo}-{tag}/ 单层目录）结构兼容。
  */
 
 class MxthxtUpdate
 {
     protected $config = [];
+    protected $rootPath = '';
 
     public function __construct()
     {
@@ -22,6 +27,9 @@ class MxthxtUpdate
                 $this->config = $cfg;
             }
         }
+        $this->rootPath = defined('ROOT_PATH')
+            ? ROOT_PATH
+            : rtrim(str_replace('\\', '/', dirname(__DIR__)), '/') . '/';
     }
 
     /**
@@ -30,7 +38,7 @@ class MxthxtUpdate
      * @param string $source       更新源：github / mirror / custom
      * @param string $repo         GitHub 仓库，格式 用户名/仓库名
      * @param string $customUrl    自定义更新接口地址
-     * @return array code:1成功 0失败; has_update:是否有新版本; latest_version:最新版本; msg:提示
+     * @return array code:1成功 0失败; has_update; latest_version; zipball_url; msg
      */
     public function check($localVersion = '', $source = 'mirror', $repo = '', $customUrl = '')
     {
@@ -57,28 +65,131 @@ class MxthxtUpdate
             'has_update' => $compare > 0,
             'latest_version' => 'v' . $latestVersion,
             'local_version' => $localVersion,
+            'zipball_url' => isset($data['zipball_url']) ? (string) $data['zipball_url'] : '',
             'msg' => $compare > 0 ? '发现新版本 v' . $latestVersion : '当前已是最新版本',
         ];
     }
 
     /**
-     * 下载更新包（后续迭代实现）
+     * 下载更新包到 runtime/mxthxt/，返回本地文件路径
+     * @param string $zipballUrl 更新包下载地址（GitHub zipball_url 或自定义地址）
+     * @param string $source     更新源：github / mirror / custom
+     * @return array code:1成功 0失败; path:本地文件路径; msg
      */
-    public function download($version, $source = 'mirror', $repo = '', $customUrl = '')
+    public function download($zipballUrl = '', $source = 'mirror')
     {
-        return $this->fail('在线下载升级功能将在后续版本开放');
+        $url = trim((string) $zipballUrl);
+        if ($url === '') {
+            return $this->fail('更新包下载地址为空');
+        }
+
+        // 国内镜像：给 GitHub 官方下载地址加镜像前缀加速
+        if ($source === 'mirror' && strpos($url, 'https://github.com') === 0) {
+            $prefix = isset($this->config['mirror_download_prefix']) ? (string) $this->config['mirror_download_prefix'] : 'https://mirror.ghproxy.com/';
+            $url = $prefix . $url;
+        }
+
+        $body = $this->httpGet($url);
+        if ($body === false || $body === '') {
+            return $this->fail('更新包下载失败，请检查服务器外网与更新源地址');
+        }
+
+        $dir = $this->runtimeDir();
+        $save = $dir . 'update_' . date('YmdHis') . '.zip';
+        if (@file_put_contents($save, $body) === false) {
+            return $this->fail('更新包保存失败，请检查 runtime 目录写入权限');
+        }
+        return ['code' => 1, 'path' => $save, 'msg' => '更新包下载完成'];
     }
 
     /**
-     * 解压并应用更新（后续迭代实现）
+     * 应用更新：解压、备份、覆盖 addons/mxgt 与 mxthxt，保留配置与启用状态
+     * @param string $packagePath 更新包本地路径（zip）
+     * @return array code:1成功 0失败; msg
      */
-    public function apply($packagePath)
+    public function apply($packagePath = '')
     {
-        return $this->fail('在线安装升级功能将在后续版本开放');
+        if (empty($packagePath) || !is_file($packagePath)) {
+            return $this->fail('更新包文件不存在');
+        }
+        if (!class_exists('ZipArchive')) {
+            return $this->fail('服务器缺少 ZipArchive 扩展，无法解压更新包');
+        }
+
+        $runtime = $this->runtimeDir();
+        $tmp = $runtime . 'apply_' . time() . '/';
+        if (!@mkdir($tmp, 0755, true)) {
+            return $this->fail('无法创建临时目录：' . $tmp);
+        }
+
+        $zip = new ZipArchive();
+        if ($zip->open($packagePath) !== true) {
+            $this->removeDir($tmp);
+            return $this->fail('更新包无法打开或已损坏');
+        }
+        $zip->extractTo($tmp);
+        $zip->close();
+
+        // 定位内容根目录（兼容 GitHub archive 的 {repo}-{tag}/ 单层目录）
+        $root = $this->findContentRoot($tmp);
+        if ($root === '') {
+            $this->removeDir($tmp);
+            return $this->fail('更新包内容不完整：缺少 mxgt 或 mxthxt 目录');
+        }
+
+        $hasMxgt = is_dir($root . 'mxgt') && is_file($root . 'mxgt/info.ini');
+        $hasMxthxt = is_dir($root . 'mxthxt') && is_file($root . 'mxthxt/Update.php');
+        if (!$hasMxgt && !$hasMxthxt) {
+            $this->removeDir($tmp);
+            return $this->fail('更新包内容不完整：mxgt/info.ini 或 mxthxt/Update.php 缺失');
+        }
+
+        // 备份当前代码
+        $backup = $runtime . 'backup_' . date('YmdHis') . '/';
+        @mkdir($backup, 0755, true);
+
+        $errors = [];
+        $addonsPath = $this->rootPath . 'addons/';
+
+        if ($hasMxgt) {
+            $dst = $addonsPath . 'mxgt/';
+            $oldState = $this->readIniState($dst . 'info.ini');
+            if (is_dir($dst)) {
+                @rename($dst, $backup . 'mxgt');
+            }
+            if (!$this->copyDir($root . 'mxgt', $dst)) {
+                $errors[] = 'mxgt';
+            } else {
+                // 合并保留旧配置（用户保存过的值），新增配置项使用新默认值
+                $this->mergeConfigFile($backup . 'mxgt/config.php', $dst . 'config.php');
+                // 保留插件启用状态
+                if ($oldState === 1) {
+                    $this->writeIniState($dst . 'info.ini', 1);
+                }
+            }
+        }
+
+        if ($hasMxthxt) {
+            $dst = $this->rootPath . 'mxthxt/';
+            if (is_dir($dst)) {
+                @rename($dst, $backup . 'mxthxt');
+            }
+            if (!$this->copyDir($root . 'mxthxt', $dst)) {
+                $errors[] = 'mxthxt';
+            }
+        }
+
+        $this->removeDir($tmp);
+
+        if ($errors) {
+            return $this->fail('更新部分失败：' . implode('、', $errors) . '，更新前备份位于 ' . $backup);
+        }
+        $this->removeDir($backup);
+        return ['code' => 1, 'msg' => '更新完成，已覆盖 addons/mxgt 与 mxthxt，配置与启用状态已保留'];
     }
 
     /**
-     * 根据更新源构建请求地址
+     * 根据更新源构建更新信息接口地址
      */
     protected function buildApiUrl($source, $repo, $customUrl)
     {
@@ -157,10 +268,173 @@ class MxthxtUpdate
     }
 
     /**
+     * 运行时目录 runtime/mxthxt/
+     */
+    protected function runtimeDir()
+    {
+        $dir = $this->rootPath . 'runtime/mxthxt/';
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+        return $dir;
+    }
+
+    /**
+     * 在解压目录中定位内容根目录（含 mxgt/ 或 mxthxt/ 的那一层）
+     */
+    protected function findContentRoot($dir)
+    {
+        $dir = rtrim($dir, '/') . '/';
+        if (is_dir($dir . 'mxgt') || is_dir($dir . 'mxthxt')) {
+            return $dir;
+        }
+        $items = @scandir($dir);
+        if ($items === false) {
+            return '';
+        }
+        foreach ($items as $it) {
+            if ($it === '.' || $it === '..') {
+                continue;
+            }
+            $sub = $dir . $it . '/';
+            if (is_dir($sub) && (is_dir($sub . 'mxgt') || is_dir($sub . 'mxthxt'))) {
+                return $sub;
+            }
+        }
+        return '';
+    }
+
+    /**
+     * 递归复制目录
+     */
+    protected function copyDir($src, $dst)
+    {
+        $src = rtrim($src, '/');
+        $dst = rtrim($dst, '/');
+        if (!is_dir($src)) {
+            return false;
+        }
+        if (!is_dir($dst) && !@mkdir($dst, 0755, true)) {
+            return false;
+        }
+        $items = @scandir($src);
+        if ($items === false) {
+            return false;
+        }
+        foreach ($items as $it) {
+            if ($it === '.' || $it === '..') {
+                continue;
+            }
+            $s = $src . '/' . $it;
+            $d = $dst . '/' . $it;
+            if (is_dir($s)) {
+                if (!$this->copyDir($s, $d)) {
+                    return false;
+                }
+            } else {
+                if (!@copy($s, $d)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 递归删除目录
+     */
+    protected function removeDir($dir)
+    {
+        if (!is_dir($dir)) {
+            return;
+        }
+        $items = @scandir($dir);
+        if ($items === false) {
+            return;
+        }
+        foreach ($items as $it) {
+            if ($it === '.' || $it === '..') {
+                continue;
+            }
+            $p = $dir . '/' . $it;
+            if (is_dir($p)) {
+                $this->removeDir($p);
+            } else {
+                @unlink($p);
+            }
+        }
+        @rmdir($dir);
+    }
+
+    /**
+     * 读取 info.ini 的 state
+     */
+    protected function readIniState($iniFile)
+    {
+        if (!is_file($iniFile)) {
+            return 0;
+        }
+        $ini = @parse_ini_file($iniFile);
+        return (is_array($ini) && isset($ini['state'])) ? intval($ini['state']) : 0;
+    }
+
+    /**
+     * 写回 info.ini 的 state
+     */
+    protected function writeIniState($iniFile, $state)
+    {
+        if (!is_file($iniFile)) {
+            return;
+        }
+        $content = @file_get_contents($iniFile);
+        if ($content === false) {
+            return;
+        }
+        $content = preg_replace('/^state\s*=\s*\d+/m', 'state = ' . intval($state), $content);
+        @file_put_contents($iniFile, $content);
+    }
+
+    /**
+     * 用旧配置文件中用户保存过的值覆盖新配置文件的同名项（新配置项保留默认值）
+     * @param string $oldFile 旧 config.php
+     * @param string $newFile 新 config.php
+     */
+    protected function mergeConfigFile($oldFile, $newFile)
+    {
+        if (!is_file($newFile)) {
+            return;
+        }
+        $new = @include $newFile;
+        if (!is_array($new)) {
+            return;
+        }
+        $old = is_file($oldFile) ? @include $oldFile : [];
+        if (!is_array($old)) {
+            $old = [];
+        }
+        $oldValues = [];
+        foreach ($old as $item) {
+            if (is_array($item) && isset($item['name'])) {
+                $oldValues[$item['name']] = isset($item['value']) ? $item['value'] : '';
+            }
+        }
+        $changed = false;
+        foreach ($new as $k => $item) {
+            if (is_array($item) && isset($item['name']) && array_key_exists($item['name'], $oldValues)) {
+                $new[$k]['value'] = $oldValues[$item['name']];
+                $changed = true;
+            }
+        }
+        if ($changed) {
+            @file_put_contents($newFile, "<?php\n\nreturn " . var_export($new, true) . ";\n");
+        }
+    }
+
+    /**
      * 返回失败结果
      */
     protected function fail($msg)
     {
-        return ['code' => 0, 'has_update' => false, 'latest_version' => '', 'msg' => $msg];
+        return ['code' => 0, 'has_update' => false, 'latest_version' => '', 'zipball_url' => '', 'msg' => $msg];
     }
 }

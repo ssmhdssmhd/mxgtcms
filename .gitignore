@@ -1,6 +1,9 @@
 # 本地工具产物（不入库）
 .trae-html-share-packages/
 
+# 发布压缩包（构建产物，不入库）
+release/
+
 # 运行时/缓存
 runtime/
 *.log

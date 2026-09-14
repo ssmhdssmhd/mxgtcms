@@ -12,6 +12,8 @@ return [
     'github_api_url' => 'https://api.github.com/repos/{repo}/releases/latest',
     // 国内镜像源地址模板（ghproxy，国内用户加速）
     'mirror_api_url' => 'https://mirror.ghproxy.com/https://api.github.com/repos/{repo}/releases/latest',
+    // 国内镜像下载前缀（给 GitHub 官方下载地址加此前缀加速）
+    'mirror_download_prefix' => 'https://mirror.ghproxy.com/',
     // 更新包命名规则：{插件名称}.{版本号} {yyyyMMddHHmm}，例如 mxgt.v0.0.2 202609141200.zip
     'package_pattern' => 'mxgt.{version} {date}.zip',
     // 请求超时（秒）

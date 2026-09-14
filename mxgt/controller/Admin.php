@@ -124,6 +124,56 @@ class Admin extends Controller
     }
 
     /**
+     * 在线更新：检查 → 下载 → 备份 → 覆盖（依赖根目录 mxthxt 云端更新核心）
+     */
+    public function doUpdate()
+    {
+        $updateCoreFile = ROOT_PATH . 'mxthxt' . DS . 'Update.php';
+        if (!is_file($updateCoreFile)) {
+            $this->error('未检测到云端更新组件，请将 mxthxt 文件夹上传至苹果CMS根目录（与 addons 同级）');
+        }
+        require_once $updateCoreFile;
+        $update = new \MxthxtUpdate();
+
+        $info = get_addon_info('mxgt');
+        $localVersion = isset($info['version']) ? $info['version'] : '';
+
+        $cfg = get_addon_config('mxgt');
+        $source = isset($cfg['update_source']) ? $cfg['update_source'] : 'mirror';
+        $repo = isset($cfg['github_repo']) ? $cfg['github_repo'] : '';
+        $customUrl = isset($cfg['update_custom_url']) ? $cfg['update_custom_url'] : '';
+
+        // 1. 检查更新
+        $result = $update->check($localVersion, $source, $repo, $customUrl);
+        if (empty($result['code'])) {
+            $this->error(isset($result['msg']) ? $result['msg'] : '检查更新失败，请稍后重试');
+        }
+        if (empty($result['has_update'])) {
+            $this->error('当前已是最新版本：' . $localVersion);
+        }
+
+        // 2. 下载更新包
+        $zipballUrl = isset($result['zipball_url']) ? $result['zipball_url'] : '';
+        $dl = $update->download($zipballUrl, $source);
+        if (empty($dl['code'])) {
+            $this->error(isset($dl['msg']) ? $dl['msg'] : '更新包下载失败');
+        }
+
+        // 3. 应用更新（备份 → 覆盖 → 保留配置与启用状态）
+        $ap = $update->apply(isset($dl['path']) ? $dl['path'] : '');
+        if (empty($ap['code'])) {
+            $this->error(isset($ap['msg']) ? $ap['msg'] : '更新应用失败');
+        }
+
+        // 4. 刷新插件缓存
+        \think\Cache::rm('addons');
+        \think\Cache::rm('hooks');
+        \think\addons\Service::refresh();
+
+        $this->success('在线更新完成（' . $result['latest_version'] . '）：' . $ap['msg']);
+    }
+
+    /**
      * 检查更新（对接根目录 mxthxt 云端更新核心）
      */
     public function checkUpdate()

@@ -52,8 +52,9 @@
         <div style="margin-top: 14px;">
             <a class="btn" href="{:addon_url('mxgt/admin/config')}">插件配置</a>
             <a class="btn btn-green" href="{:addon_url('mxgt/admin/checkUpdate')}">检查更新</a>
+            <a class="btn btn-green" href="{:addon_url('mxgt/admin/doUpdate')}" onclick="return confirm('确定执行在线更新吗？更新前会自动备份当前代码。');">在线更新</a>
         </div>
-        <div class="tip">「检查更新」需将 mxthxt 文件夹部署在苹果CMS根目录（与 addons 同级）后方可使用。</div>
+        <div class="tip">「检查更新 / 在线更新」需将 mxthxt 文件夹部署在苹果CMS根目录（与 addons 同级）后方可使用；在线更新将从配置的更新源下载最新代码并覆盖 addons/mxgt 与 mxthxt。</div>
     </div>
 </div>
 
