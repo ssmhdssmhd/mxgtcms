@@ -2,7 +2,7 @@
 
 > 项目名称：沫兮官替官解系统
 > 项目代号：mxgtcms
-> 当前版本：v0.0.7
+> 当前版本：v0.0.8
 > 更新日期：2026-09-14
 
 ---
@@ -142,6 +142,7 @@ https://github.com/ssmhdssmhd/mxgtcms/releases
 
 | 版本 | 更新包文件名 | 发布时间 | 更新说明 | 下载 |
 | ---- | ---- | ---- | ---- | ---- |
+| v0.0.8 | `mxgtcms.v0.0.8 202609142331.zip` | 2026-09-14 | Logo 调整为 128×128 方形透明图标（内容居中不裁切） | Releases 页 |
 | v0.0.7 | `mxgtcms.v0.0.7 202609142322.zip` | 2026-09-14 | 新增默认 Logo（static/addons/mxgt/logo.png），顶部条/前台入口直接显示 | Releases 页 |
 | v0.0.6 | —（随源码，未单独发包） | 2026-09-14 | 插件界面全面美化（看板/配置页/前台），预留 Logo 位置 | — |
 | v0.0.5 | `mxgtcms.v0.0.5 202609142258.zip` | 2026-09-14 | 在线更新改用发行版（Release 资产）；更新源仓库指向 ssmhdssmhd/mxgtcms | Releases 页 |
@@ -169,6 +170,11 @@ https://github.com/ssmhdssmhd/mxgtcms/releases
 ---
 
 ## 五、版本更新日志
+
+### v0.0.8（2026-09-14）
+- **Logo 调整**：
+  - 将默认 Logo 调整为 **128×128 方形透明 PNG**（蝴蝶 + 沫兮品牌图标，内容居中、等比放大不裁切）。
+  - 位置不变：`static/addons/mxgt/logo.png`，对应模板 `__STATIC__/addons/mxgt/logo.png`，首页看板 / 配置页 / 前台入口顶部显示。
 
 ### v0.0.7（2026-09-14）
 - **新增默认 Logo**：
