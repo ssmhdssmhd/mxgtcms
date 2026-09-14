@@ -5,96 +5,157 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>沫兮官替官解系统 - 插件配置</title>
 <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #f5f6f8; font-family: "Microsoft YaHei", Arial, sans-serif; color: #333; padding: 20px; }
-    .panel { background: #fff; border: 1px solid #e6e6e6; border-radius: 4px; overflow: hidden; }
-    .panel-hd { padding: 12px 20px; border-bottom: 1px solid #f2f2f2; font-size: 16px; font-weight: bold; }
-    .panel-bd { padding: 20px; }
-    .form-item { margin-bottom: 18px; }
-    .form-item .label { display: block; font-size: 14px; margin-bottom: 6px; }
-    .form-item .tip { font-size: 12px; color: #999; margin-top: 6px; line-height: 1.6; }
-    .input, .select, .textarea {
-        width: 100%; max-width: 520px; padding: 8px 10px; border: 1px solid #dcdfe6;
-        border-radius: 3px; font-size: 14px; background: #fff; outline: none;
+    :root {
+        --primary: #657A7F;      /* 主色 */
+        --primary-dark: #54686D;
+        --accent: #B86B74;       /* 辅色 */
+        --accent-dark: #A05A63;
+        --bg: #F2F4F5;
+        --card: #FFFFFF;
+        --border: #E2E7E9;
+        --text: #333C3F;
+        --muted: #8A9599;
+        --danger: #C2504F;
+        --ok: #5FA878;
     }
-    .input:focus, .select:focus, .textarea:focus { border-color: #1E9FFF; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif; color: var(--text); padding: 20px; }
+
+    /* 顶部条 */
+    .topbar { display: flex; align-items: center; background: linear-gradient(120deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 10px; padding: 16px 22px; margin-bottom: 18px; color: #fff; box-shadow: 0 4px 14px rgba(101,122,127,.28); }
+    .topbar .logo { width: 40px; height: 40px; border-radius: 8px; margin-right: 14px; object-fit: cover; background: rgba(255,255,255,.18); }
+    .topbar h1 { font-size: 18px; font-weight: 600; }
+    .topbar .sub { font-size: 12px; opacity: .85; margin-top: 2px; }
+    .topbar .ver { margin-left: auto; background: rgba(255,255,255,.18); padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+
+    .layout { display: flex; gap: 18px; align-items: flex-start; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 2px 8px rgba(51,60,63,.05); overflow: hidden; }
+    .card-hd { padding: 14px 20px; border-bottom: 1px solid var(--border); font-size: 15px; font-weight: 600; color: var(--primary-dark); display: flex; align-items: center; }
+    .card-hd::before { content: ""; width: 4px; height: 14px; background: var(--primary); border-radius: 2px; margin-right: 8px; }
+    .card-bd { padding: 20px; }
+
+    /* 配置表单（左栏） */
+    .col-config { flex: 1.5; min-width: 0; }
+    .form-item { margin-bottom: 18px; }
+    .form-item .label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .form-item .tip { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.7; }
+    .input, .select, .textarea {
+        width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 6px;
+        font-size: 14px; background: #FBFCFC; color: var(--text); outline: none; transition: all .2s;
+    }
+    .input:focus, .select:focus, .textarea:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(101,122,127,.12); }
     .textarea { height: 90px; resize: vertical; }
-    .btn { display: inline-block; padding: 8px 30px; border: none; border-radius: 3px; font-size: 14px; cursor: pointer; text-decoration: none; color: #fff; background: #1E9FFF; }
-    .btn:hover { opacity: 0.85; }
-    .btn-back { background: #909399; margin-left: 10px; }
-    .badge { display: inline-block; padding: 2px 10px; border-radius: 3px; font-size: 12px; color: #fff; }
-    .badge-ok { background: #5FB878; }
-    .badge-warn { background: #FFB800; }
-    .badge-error { background: #FF5722; }
-    .label { color: #888; margin-right: 10px; }
+
+    /* 更新面板（右栏） */
+    .col-update { flex: 1; min-width: 280px; }
+    .ver-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px dashed var(--border); font-size: 14px; }
+    .ver-row:last-of-type { border-bottom: none; }
+    .ver-row .k { color: var(--muted); font-size: 13px; }
+    .ver-row .v { font-weight: 600; color: var(--text); }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; color: #fff; font-weight: 500; }
+    .badge-ok { background: var(--ok); }
+    .badge-update { background: var(--accent); }
+    .badge-err { background: var(--danger); }
+    .btn { display: inline-block; padding: 9px 20px; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; text-decoration: none; color: #fff; background: var(--primary); transition: all .2s; }
+    .btn:hover { background: var(--primary-dark); }
+    .btn-accent { background: var(--accent); }
+    .btn-accent:hover { background: var(--accent-dark); }
+    .btn-ghost { background: transparent; color: var(--primary); border: 1px solid var(--primary); }
+    .btn-ghost:hover { background: rgba(101,122,127,.08); }
+    .btn-back { background: #fff; color: var(--muted); border: 1px solid var(--border); margin-left: 8px; }
+    .btn-back:hover { color: var(--text); background: var(--bg); }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+    .hint { font-size: 12px; color: var(--muted); margin-top: 14px; line-height: 1.8; }
+
+    @media (max-width: 900px) {
+        .layout { flex-direction: column; }
+        .col-config, .col-update { width: 100%; min-width: 0; }
+    }
 </style>
 </head>
 <body>
 
-<div class="panel">
-    <div class="panel-hd">在线更新</div>
-    <div class="panel-bd">
-        <div class="info-grid" style="display:flex;flex-wrap:wrap;margin-bottom:6px;">
-            <div class="info-item" style="width:50%;padding:8px 0;font-size:14px;"><span class="label" style="color:#888;margin-right:10px;">本地版本</span>v{$vinfo.local_version|default='0.0.3'}</div>
-            <div class="info-item" style="width:50%;padding:8px 0;font-size:14px;"><span class="label" style="color:#888;margin-right:10px;">远程版本</span>
-                {if condition="$vinfo.ok eq 1"}v{$vinfo.remote_version}{else /}<span style="color:#FF5722;">{$vinfo.msg}</span>{/if}
-            </div>
-            <div class="info-item" style="width:50%;padding:8px 0;font-size:14px;"><span class="label" style="color:#888;margin-right:10px;">状态</span>
-                {if condition="$vinfo.ok eq 1"}
-                    {if condition="$vinfo.has_update eq 1"}<span class="badge badge-warn">发现新版本</span>{else /}<span class="badge badge-ok">已是最新</span>{/if}
-                {else /}<span class="badge badge-error">检查失败</span>{/if}
-            </div>
-            <div class="info-item" style="width:50%;padding:8px 0;font-size:14px;"><span class="label" style="color:#888;margin-right:10px;">检查时间</span>{$vinfo.time|date='Y-m-d H:i:s',###}</div>
-        </div>
-        <div style="margin-top: 10px;">
-            <a class="btn" href="{:addon_url('mxgt/admin/config', ['check' => 1])}">检查更新</a>
-            {if condition="$vinfo.has_update eq 1"}
-            <a class="btn btn-green" href="{:addon_url('mxgt/admin/doUpdate')}" onclick="return confirm('确定执行在线更新吗？更新前会自动备份当前代码。');">在线更新</a>
-            {/if}
-        </div>
-        <div class="tip" style="font-size:12px;color:#999;margin-top:8px;">在线更新将从配置的更新源下载最新代码并覆盖 addons/mxgt 与 mxthxt，自动保留配置与启用状态。</div>
+<div class="topbar">
+    <img class="logo" src="__STATIC__/addons/mxgt/logo.png" alt="logo" onerror="this.style.display='none'">
+    <div>
+        <h1>沫兮官替官解系统</h1>
+        <div class="sub">Plugin Configuration</div>
     </div>
+    <span class="ver">v{$vinfo.local_version|default='0.0.5'}</span>
 </div>
 
-<div class="panel">
-    <div class="panel-hd">插件配置</div>
-    <div class="panel-bd">
-        <form method="post" action="{:addon_url('mxgt/admin/config')}">
-            {foreach name="config" item="item"}
-            <div class="form-item">
-                <label class="label">{$item.title}</label>
-                {switch name="item.type"}
-                {case value="select"}
-                <select name="row[{$item.name}]" class="select">
-                    {foreach name="item.content" item="opt" key="optKey"}
-                    <option value="{$optKey}" {if condition="$item['value'] eq $optKey"}selected{/if}>{$opt}</option>
-                    {/foreach}
-                </select>
-                {/case}
-                {case value="textarea"}
-                <textarea name="row[{$item.name}]" class="textarea">{$item.value}</textarea>
-                {/case}
-                {case value="number"}
-                <input type="number" name="row[{$item.name}]" class="input" value="{$item.value}">
-                {/case}
-                {case value="checkbox"}
-                <input type="text" name="row[{$item.name}]" class="input" value="{$item.value}">
-                {/case}
-                {default /}
-                <input type="text" name="row[{$item.name}]" class="input" value="{$item.value}">
-                {/switch}
-                {if condition="!empty($item['tip'])"}<div class="tip">{$item.tip}</div>{/if}
-            </div>
-            {/foreach}
-            <div style="margin-top: 10px;">
-                <button type="submit" class="btn">保存配置</button>
-                <a class="btn btn-back" href="{:addon_url('mxgt/admin/index')}">返回首页</a>
-            </div>
-        </form>
-        <div class="tip" style="margin-top: 12px;">
-            提示：也可以前往「苹果CMS后台 → 应用中心 → 应用插件 → 沫兮官替官解系统 → 设置」进行配置，两处保存位置一致。
+<div class="layout">
+
+    <!-- 插件配置 -->
+    <div class="card col-config">
+        <div class="card-hd">插件配置</div>
+        <div class="card-bd">
+            <form method="post" action="{:addon_url('mxgt/admin/config')}">
+                {foreach name="config" item="item"}
+                <div class="form-item">
+                    <label class="label">{$item.title}</label>
+                    {switch name="item.type"}
+                    {case value="select"}
+                    <select name="row[{$item.name}]" class="select">
+                        {foreach name="item.content" item="opt" key="optKey"}
+                        <option value="{$optKey}" {if condition="$item['value'] eq $optKey"}selected{/if}>{$opt}</option>
+                        {/foreach}
+                    </select>
+                    {/case}
+                    {case value="textarea"}
+                    <textarea name="row[{$item.name}]" class="textarea">{$item.value}</textarea>
+                    {/case}
+                    {case value="number"}
+                    <input type="number" name="row[{$item.name}]" class="input" value="{$item.value}">
+                    {/case}
+                    {default /}
+                    <input type="text" name="row[{$item.name}]" class="input" value="{$item.value}">
+                    {/switch}
+                    {if condition="!empty($item['tip'])"}<div class="tip">{$item.tip}</div>{/if}
+                </div>
+                {/foreach}
+                <div class="actions">
+                    <button type="submit" class="btn">保存配置</button>
+                    <a class="btn btn-back" href="{:addon_url('mxgt/admin/index')}">返回首页</a>
+                </div>
+            </form>
+            <div class="hint">提示：也可前往「苹果CMS后台 → 应用中心 → 应用插件 → 沫兮官替官解系统 → 设置」进行配置，两处保存位置一致。</div>
         </div>
     </div>
+
+    <!-- 在线更新（配置旁边） -->
+    <div class="card col-update">
+        <div class="card-hd">在线更新</div>
+        <div class="card-bd">
+            <div class="ver-row"><span class="k">本地版本</span><span class="v">v{$vinfo.local_version|default='0.0.5'}</span></div>
+            <div class="ver-row">
+                <span class="k">远程版本</span>
+                <span class="v">
+                    {if condition="$vinfo.ok eq 1"}v{$vinfo.remote_version}{else /}<span style="color:var(--danger);font-size:12px;">{$vinfo.msg}</span>{/if}
+                </span>
+            </div>
+            <div class="ver-row">
+                <span class="k">状态</span>
+                <span>
+                    {if condition="$vinfo.ok eq 1"}
+                        {if condition="$vinfo.has_update eq 1"}<span class="badge badge-update">发现新版本</span>{else /}<span class="badge badge-ok">已是最新</span>{/if}
+                    {else /}<span class="badge badge-err">检查失败</span>{/if}
+                </span>
+            </div>
+            <div class="ver-row">
+                <span class="k">检查时间</span>
+                <span class="v" style="font-weight:400;font-size:12px;color:var(--muted);">{$vinfo.time|date='Y-m-d H:i:s',###}</span>
+            </div>
+            <div class="actions">
+                <a class="btn btn-ghost" href="{:addon_url('mxgt/admin/config', ['check' => 1])}">检查更新</a>
+                {if condition="$vinfo.has_update eq 1"}
+                <a class="btn btn-accent" href="{:addon_url('mxgt/admin/doUpdate')}" onclick="return confirm('确定执行在线更新吗？更新前会自动备份当前代码。');">在线更新</a>
+                {/if}
+            </div>
+            <div class="hint">在线更新将从配置的更新源下载最新发行版并覆盖 addons/mxgt 与 mxthxt，自动保留配置与启用状态。</div>
+        </div>
+    </div>
+
 </div>
 
 </body>

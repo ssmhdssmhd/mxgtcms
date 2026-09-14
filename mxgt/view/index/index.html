@@ -5,24 +5,36 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>沫兮官替官解系统</title>
 <style>
+    :root {
+        --primary: #657A7F;      /* 主色 */
+        --primary-dark: #54686D;
+        --accent: #B86B74;       /* 辅色 */
+        --bg: #F2F4F5;
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: "Microsoft YaHei", Arial, sans-serif; background: #f7f8fa; color: #333; }
-    .wrap { max-width: 640px; margin: 80px auto; background: #fff; border-radius: 8px; padding: 40px; box-shadow: 0 2px 12px rgba(0,0,0,.06); text-align: center; }
-    h1 { font-size: 24px; margin-bottom: 8px; }
-    .ver { color: #999; font-size: 14px; margin-bottom: 20px; }
-    .desc { color: #666; font-size: 14px; line-height: 1.9; text-align: left; }
+    body { font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif; background: var(--bg); color: #333C3F; }
+    .wrap { max-width: 640px; margin: 80px auto; background: #fff; border-radius: 12px; padding: 44px 40px; box-shadow: 0 8px 30px rgba(101,122,127,.12); text-align: center; border-top: 4px solid var(--accent); }
+    .logo { width: 64px; height: 64px; border-radius: 14px; margin: 0 auto 16px; display: block; object-fit: cover; background: rgba(101,122,127,.12); }
+    h1 { font-size: 24px; color: var(--primary-dark); margin-bottom: 6px; }
+    .ver { color: #8A9599; font-size: 14px; margin-bottom: 22px; }
+    .ver b { color: var(--accent); font-weight: 600; }
+    .desc { color: #5B666A; font-size: 14px; line-height: 2.1; text-align: left; background: #F7F9FA; border-radius: 8px; padding: 16px 18px; }
+    .desc b { color: var(--primary-dark); }
+    .foot { margin-top: 20px; font-size: 12px; color: #AAB3B6; }
 </style>
 </head>
 <body>
 <div class="wrap">
+    <img class="logo" src="__STATIC__/addons/mxgt/logo.png" alt="logo" onerror="this.style.display='none'">
     <h1>沫兮官替官解系统</h1>
-    <div class="ver">v{$version|default='0.0.1'}</div>
+    <div class="ver">当前版本 <b>v{$version|default='0.0.5'}</b></div>
     <p class="desc">
         本插件需在新版苹果CMS后台使用：<br>
-        · mxgt 插件位于 addons 目录，后台可配置、启用、停用、卸载；<br>
-        · mxthxt 组件位于苹果CMS根目录，提供云端在线更新能力。<br>
-        当前页面为插件前台入口，管理功能请前往苹果CMS后台操作。
+        · <b>mxgt</b> 插件位于 addons 目录，后台可配置、启用、停用、卸载；<br>
+        · <b>mxthxt</b> 组件位于苹果CMS根目录，提供云端在线更新能力；<br>
+        · 支持 GitHub 发行版在线更新与国内镜像加速。
     </p>
+    <div class="foot">沫兮官替官解系统 · MacCMS Addon</div>
 </div>
 </body>
 </html>
