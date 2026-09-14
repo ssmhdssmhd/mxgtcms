@@ -1,90 +1,130 @@
 <?php
 /**
  * 沫兮官替官解系统 - 后台控制器
- * 路由：addons/mxgt/admin/{action}
+ * 路由：/index.php/addons/mxgt/admin/{action}
+ *
+ * 新版苹果CMS 的插件后台页面不继承核心 Base，而是继承 think\addons\Controller，
+ * 登录与节点权限在 _initialize() 中自行校验。
  */
 
 namespace addons\mxgt\controller;
 
-use think\Db;
-use addons\mxgt\model\MxgtConfig;
+use think\addons\Controller;
+use think\addons\Service;
 
-class Admin extends \app\admin\controller\Base
+class Admin extends Controller
 {
-    // 插件目录名
-    protected $addonName = 'mxgt';
+    /**
+     * 鉴权：必须为已登录的苹果CMS后台管理员，且拥有插件节点权限
+     */
+    protected function _initialize()
+    {
+        parent::_initialize();
+
+        if (session('admin_auth') !== '1' || empty(session('admin_info'))) {
+            self::deny('未登录或登录已过期，请先登录苹果CMS后台');
+        }
+        $info = session('admin_info');
+        if (!is_array($info) || empty($info['admin_id'])) {
+            self::deny('管理员信息异常，请重新登录');
+        }
+        // 超级管理员（admin_id=1）直接放行；其余校验节点权限
+        if ((string) $info['admin_id'] !== '1') {
+            $auths = ',' . (isset($info['admin_auth']) ? (string) $info['admin_auth'] : '') . ',';
+            if (strpos($auths, ',addons/mxgt/admin/*,') === false) {
+                self::deny('无权访问该插件');
+            }
+        }
+    }
+
+    /**
+     * 鉴权失败出口（直出 HTML 并终止）
+     */
+    protected static function deny($msg, $status = 403)
+    {
+        if (!headers_sent()) {
+            header('Content-Type: text/html; charset=utf-8');
+            http_response_code(intval($status));
+        }
+        echo '<meta charset="utf-8"><div style="padding:40px;font-size:14px;color:#666;text-align:center">'
+            . htmlspecialchars((string) $msg, ENT_QUOTES, 'UTF-8') . '</div>';
+        exit;
+    }
 
     /**
      * 首页看板
      */
     public function index()
     {
-        // 插件版本信息
-        $versionFile = ADDON_PATH . $this->addonName . DS . 'version.php';
-        $versionInfo = is_file($versionFile) ? include $versionFile : [];
+        $info = get_addon_info('mxgt');
+        $version = isset($info['version']) ? $info['version'] : '';
+        $state = isset($info['state']) ? intval($info['state']) : 0;
 
-        // 插件状态（addon.php 中的 status，由苹果CMS维护）
-        $addonFile = ADDON_PATH . $this->addonName . DS . 'addon.php';
-        $addonInfo = is_file($addonFile) ? include $addonFile : [];
-        $enabled = isset($addonInfo['status']) ? intval($addonInfo['status']) : 0;
-
-        // 数据表是否已安装
-        $tableName = config('database.prefix') . 'mxgt_config';
-        $installed = 0;
+        // 元数据表状态
+        $metaInstalled = 0;
+        $installedAt = '';
         try {
-            $installed = Db::query("SHOW TABLES LIKE '{$tableName}'") ? 1 : 0;
-        } catch (\Exception $e) {
-            $installed = 0;
+            $row = \think\Db::name('mxgt_meta')->where('meta_key', 'installed_at')->find();
+            if (!empty($row)) {
+                $metaInstalled = 1;
+                $installedAt = $row['meta_value'];
+            }
+        } catch (\Throwable $e) {
+            $metaInstalled = 0;
         }
 
-        // 云端更新组件是否存在（mxthxt 需放在苹果CMS根目录）
+        // 云端更新组件（mxthxt 需放在苹果CMS根目录，与 addons 同级）
         $updateCoreFile = ROOT_PATH . 'mxthxt' . DS . 'Update.php';
         $updateCoreExists = is_file($updateCoreFile) ? 1 : 0;
 
-        $this->assign('versionInfo', $versionInfo);
-        $this->assign('enabled', $enabled);
-        $this->assign('installed', $installed);
-        $this->assign('updateCoreExists', $updateCoreExists);
-        return $this->addonFetch('admin_index');
+        // 当前配置（模板中也可用 {$config.xxx}）
+        $cfg = get_addon_config('mxgt');
+
+        $this->assign('addon_info', $info);
+        $this->assign('version', $version);
+        $this->assign('state', $state);
+        $this->assign('meta_installed', $metaInstalled);
+        $this->assign('installed_at', $installedAt);
+        $this->assign('update_core_exists', $updateCoreExists);
+        $this->assign('update_source', isset($cfg['update_source']) ? $cfg['update_source'] : '');
+        return $this->fetch('admin/index');
     }
 
     /**
-     * 插件配置页
+     * 插件自带配置页（保存走框架 set_addon_fullconfig，与后台「设置」同源）
      */
     public function config()
     {
-        if (request()->isPost()) {
-            $param = input('param.');
-            $config = isset($param['config']) ? $param['config'] : [];
-            if (!is_array($config)) {
-                $config = [];
+        if ($this->request->isPost()) {
+            $params = $this->request->post('row/a');
+            if (!is_array($params)) {
+                $params = [];
             }
-            foreach ($config as $k => $v) {
-                MxgtConfig::setConfig($k, is_array($v) ? json_encode($v) : $v);
+            $full = get_addon_fullconfig('mxgt');
+            if (!is_array($full)) {
+                $full = [];
             }
-            $this->success('配置保存成功', mac_url('addons/mxgt/admin/config'));
+            foreach ($full as &$item) {
+                if (isset($params[$item['name']])) {
+                    $item['value'] = is_array($params[$item['name']])
+                        ? implode(',', $params[$item['name']])
+                        : (string) $params[$item['name']];
+                }
+            }
+            unset($item);
+            set_addon_fullconfig('mxgt', $full);
+            Service::refresh();
+            Cache('addons', null);
+            Cache('hooks', null);
+            $this->success('配置保存成功', addon_url('mxgt/admin/config'));
         }
 
-        // 配置项定义
-        $configFile = ADDON_PATH . $this->addonName . DS . 'config.php';
-        $configList = is_file($configFile) ? include $configFile : [];
-
-        // 已保存的配置（覆盖默认值）
-        $saved = MxgtConfig::allConfig();
-        foreach ($configList as &$item) {
-            if (isset($saved[$item['name']])) {
-                $item['value'] = $saved[$item['name']];
-            }
-            $item['default'] = isset($item['value']) ? $item['value'] : '';
-        }
-        unset($item);
-
-        $this->assign('configList', $configList);
-        return $this->addonFetch('admin_config');
+        $this->assign('config', get_addon_fullconfig('mxgt'));
+        return $this->fetch('admin/config');
     }
 
     /**
-     * 检查更新（对接 mxthxt 云端更新核心）
+     * 检查更新（对接根目录 mxthxt 云端更新核心）
      */
     public function checkUpdate()
     {
@@ -92,40 +132,25 @@ class Admin extends \app\admin\controller\Base
         if (!is_file($updateCoreFile)) {
             $this->error('未检测到云端更新组件，请将 mxthxt 文件夹上传至苹果CMS根目录（与 addons 同级）');
         }
-
         require_once $updateCoreFile;
         $update = new \MxthxtUpdate();
 
-        // 插件本地版本
-        $versionFile = ADDON_PATH . $this->addonName . DS . 'version.php';
-        $versionInfo = is_file($versionFile) ? include $versionFile : [];
-        $localVersion = isset($versionInfo['version']) ? $versionInfo['version'] : '';
+        $info = get_addon_info('mxgt');
+        $localVersion = isset($info['version']) ? $info['version'] : '';
 
-        // 更新源配置
-        $source = MxgtConfig::getConfig('update_source', 'mirror');
-        $customUrl = MxgtConfig::getConfig('update_custom_url', '');
-        $repo = MxgtConfig::getConfig('github_repo', '');
+        $cfg = get_addon_config('mxgt');
+        $source = isset($cfg['update_source']) ? $cfg['update_source'] : 'mirror';
+        $repo = isset($cfg['github_repo']) ? $cfg['github_repo'] : '';
+        $customUrl = isset($cfg['update_custom_url']) ? $cfg['update_custom_url'] : '';
 
         $result = $update->check($localVersion, $source, $repo, $customUrl);
 
         if (isset($result['code']) && $result['code'] === 1) {
             if (!empty($result['has_update'])) {
-                $this->error('发现新版本：' . $result['latest_version'] . '，当前版本：' . $localVersion . '，在线下载升级将在后续版本开放。');
+                $this->error('发现新版本：' . $result['latest_version'] . '，当前版本：' . $localVersion . '，在线下载升级将在后续版本开放');
             }
             $this->success('当前已是最新版本：' . $localVersion);
         }
         $this->error(isset($result['msg']) ? $result['msg'] : '检查更新失败，请稍后重试');
-    }
-
-    /**
-     * 渲染插件模板（显式指定 addons/mxgt/view 模板目录）
-     * @param string $template 模板名（不含后缀，如 admin_index）
-     * @return string
-     */
-    protected function addonFetch($template, $vars = [])
-    {
-        return $this->view->fetch($template, $vars, [
-            'view_path' => ADDON_PATH . $this->addonName . DS . 'view' . DS,
-        ]);
     }
 }

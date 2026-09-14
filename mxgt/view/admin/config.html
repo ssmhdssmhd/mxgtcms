@@ -29,35 +29,41 @@
 <div class="panel">
     <div class="panel-hd">插件配置</div>
     <div class="panel-bd">
-        <form method="post" action="{:mac_url('addons/mxgt/admin/config')}">
-            {foreach name="configList" item="item"}
+        <form method="post" action="{:addon_url('mxgt/admin/config')}">
+            {foreach name="config" item="item"}
             <div class="form-item">
                 <label class="label">{$item.title}</label>
                 {switch name="item.type"}
                 {case value="select"}
-                <select name="config[{$item.name}]" class="select">
-                    {foreach name="item.options" item="opt" key="optKey"}
+                <select name="row[{$item.name}]" class="select">
+                    {foreach name="item.content" item="opt" key="optKey"}
                     <option value="{$optKey}" {if condition="$item['value'] eq $optKey"}selected{/if}>{$opt}</option>
                     {/foreach}
                 </select>
                 {/case}
                 {case value="textarea"}
-                <textarea name="config[{$item.name}]" class="textarea">{$item.value}</textarea>
+                <textarea name="row[{$item.name}]" class="textarea">{$item.value}</textarea>
                 {/case}
                 {case value="number"}
-                <input type="number" name="config[{$item.name}]" class="input" value="{$item.value}">
+                <input type="number" name="row[{$item.name}]" class="input" value="{$item.value}">
+                {/case}
+                {case value="checkbox"}
+                <input type="text" name="row[{$item.name}]" class="input" value="{$item.value}">
                 {/case}
                 {default /}
-                <input type="text" name="config[{$item.name}]" class="input" value="{$item.value}">
+                <input type="text" name="row[{$item.name}]" class="input" value="{$item.value}">
                 {/switch}
                 {if condition="!empty($item['tip'])"}<div class="tip">{$item.tip}</div>{/if}
             </div>
             {/foreach}
             <div style="margin-top: 10px;">
                 <button type="submit" class="btn">保存配置</button>
-                <a class="btn btn-back" href="{:mac_url('addons/mxgt/admin/index')}">返回首页</a>
+                <a class="btn btn-back" href="{:addon_url('mxgt/admin/index')}">返回首页</a>
             </div>
         </form>
+        <div class="tip" style="margin-top: 12px;">
+            提示：也可以前往「苹果CMS后台 → 应用中心 → 应用插件 → 沫兮官替官解系统 → 设置」进行配置，两处保存位置一致。
+        </div>
     </div>
 </div>
 
