@@ -30,7 +30,9 @@ class Mxgt extends \think\Addons
      */
     public function install()
     {
-        return $this->setup();
+        $this->setup();
+        $this->registerMenu();
+        return true;
     }
 
     /**
@@ -38,22 +40,28 @@ class Mxgt extends \think\Addons
      */
     public function enable()
     {
-        return $this->setup();
-    }
-
-    /**
-     * 停用：数据一律保留，重新启用后仍可恢复
-     */
-    public function disable()
-    {
+        $this->setup();
+        $this->registerMenu();
         return true;
     }
 
     /**
-     * 卸载：删除元数据表，并清理启用时复制到核心目录的残留
+     * 停用：数据一律保留，重新启用后仍可恢复；同时移除后台快捷菜单
+     */
+    public function disable()
+    {
+        $this->unregisterMenu();
+        return true;
+    }
+
+    /**
+     * 卸载：删除元数据表，清理启用时复制到核心目录的残留，并移除后台快捷菜单
      */
     public function uninstall()
     {
+        // 移除后台快捷菜单
+        $this->unregisterMenu();
+
         // 删除元数据表
         try {
             Db::execute('DROP TABLE IF EXISTS `' . config('database.prefix') . 'mxgt_meta`');
@@ -110,6 +118,104 @@ class Mxgt extends \think\Addons
     {
         $this->ensureMeta();
         return true;
+    }
+
+    /**
+     * 注册后台快捷菜单（侧边栏入口）
+     * 苹果CMS 后台「自定义菜单配置」存储于 application/extra/quickmenu.php（新版本）
+     * 或 application/data/config/quickmenu.txt（旧版本），每行格式：菜单名,链接地址。
+     * 重复注册时幂等（已存在同名菜单则不重复添加）。
+     * @return bool
+     */
+    private function registerMenu()
+    {
+        $line = $this->menuLine();
+        $menus = $this->readQuickMenu();
+        foreach ($menus as $item) {
+            if (trim($item) === $line) {
+                return true;
+            }
+        }
+        $menus[] = $line;
+        return $this->writeQuickMenu($menus);
+    }
+
+    /**
+     * 移除后台快捷菜单（停用/卸载时调用），幂等
+     * @return bool
+     */
+    private function unregisterMenu()
+    {
+        $line = $this->menuLine();
+        $menus = $this->readQuickMenu();
+        $kept = [];
+        foreach ($menus as $item) {
+            if (trim($item) === $line) {
+                continue;
+            }
+            $kept[] = $item;
+        }
+        if (count($kept) === count($menus)) {
+            return true;
+        }
+        return $this->writeQuickMenu($kept);
+    }
+
+    /**
+     * 快捷菜单单行内容：菜单名,插件首页链接
+     * 链接以 / 开头（绝对路径），苹果CMS 后台 Index::index() 会直接使用该 URL。
+     * @return string
+     */
+    private function menuLine()
+    {
+        return '沫兮官替官解系统,/index.php/addons/mxgt/admin/index';
+    }
+
+    /**
+     * 读取当前快捷菜单配置（数组，每项为一行“名称,链接”）
+     * @return array
+     */
+    private function readQuickMenu()
+    {
+        // 新版本：application/extra/quickmenu.php（config('quickmenu')）
+        $menus = Config::get('quickmenu');
+        if (is_array($menus) && !empty($menus)) {
+            return array_values($menus);
+        }
+        // 旧版本：application/data/config/quickmenu.txt
+        $txtFile = APP_PATH . 'data' . DS . 'config' . DS . 'quickmenu.txt';
+        if (is_file($txtFile)) {
+            $content = @file_get_contents($txtFile);
+            $arr = explode(chr(13), (string) $content);
+            $arr = array_map('trim', $arr);
+            return array_values(array_filter($arr, 'strlen'));
+        }
+        return [];
+    }
+
+    /**
+     * 写入快捷菜单配置
+     * 优先写入新版本 extra/quickmenu.php（mac_arr2file），失败时回退旧版本 txt 文件。
+     * @param array $menus
+     * @return bool
+     */
+    private function writeQuickMenu($menus)
+    {
+        $menus = array_values(array_filter(array_map('trim', $menus), 'strlen'));
+        $extraFile = APP_PATH . 'extra' . DS . 'quickmenu.php';
+        if (function_exists('mac_arr2file')) {
+            $res = mac_arr2file($extraFile, $menus);
+            if ($res !== false) {
+                return true;
+            }
+        }
+        // 回退：旧版本 txt 文件
+        $txtFile = APP_PATH . 'data' . DS . 'config' . DS . 'quickmenu.txt';
+        $txtDir = dirname($txtFile);
+        if (!is_dir($txtDir)) {
+            @mkdir($txtDir, 0755, true);
+        }
+        return @file_put_contents($txtFile, implode(chr(13), $menus)) !== false;
     }
 
     /**

@@ -2,7 +2,7 @@
 
 > 项目名称：沫兮官替官解系统
 > 项目代号：mxgtcms
-> 当前版本：v0.0.8
+> 当前版本：v0.0.9
 > 更新日期：2026-09-14
 
 ---
@@ -74,7 +74,8 @@
 
 ### 2.2 启用 / 停用
 - 后台插件列表直接操作「启用 / 停用」，状态写回 `info.ini` 的 `state` 字段，即开即用。
-- 启用后插件页面入口：`/index.php/addons/mxgt/admin/index`（后台首页看板）与 `/index.php/addons/mxgt/admin/config`（插件配置）。
+- **启用后自动注册后台侧边栏快捷菜单**（「沫兮官替官解系统」入口，指向插件首页看板），无需手动在「系统设置 → 快捷菜单」添加；停用 / 卸载时自动移除。
+- 启用后插件页面入口：`/index.php/addons/mxgt/admin/index`（后台首页看板）与 `/index.php/addons/mxgt/admin/config`（插件配置，含在线更新）。
 
 ### 2.3 配置
 - 方式一：苹果CMS 后台 → 应用中心 → 应用插件 → 沫兮官替官解系统 → **设置**（框架原生配置页）。
@@ -142,6 +143,7 @@ https://github.com/ssmhdssmhd/mxgtcms/releases
 
 | 版本 | 更新包文件名 | 发布时间 | 更新说明 | 下载 |
 | ---- | ---- | ---- | ---- | ---- |
+| v0.0.9 | `mxgtcms.v0.0.9 202609142342.zip` | 2026-09-14 | 启用/安装自动注册后台侧边栏菜单（停用/卸载自动移除），修复启用后找不到插件入口的问题 | Releases 页 |
 | v0.0.8 | `mxgtcms.v0.0.8 202609142331.zip` | 2026-09-14 | Logo 调整为 128×128 方形透明图标（内容居中不裁切） | Releases 页 |
 | v0.0.7 | `mxgtcms.v0.0.7 202609142322.zip` | 2026-09-14 | 新增默认 Logo（static/addons/mxgt/logo.png），顶部条/前台入口直接显示 | Releases 页 |
 | v0.0.6 | —（随源码，未单独发包） | 2026-09-14 | 插件界面全面美化（看板/配置页/前台），预留 Logo 位置 | — |
@@ -170,6 +172,12 @@ https://github.com/ssmhdssmhd/mxgtcms/releases
 ---
 
 ## 五、版本更新日志
+
+### v0.0.9（2026-09-14）
+- **启用后自动注册后台侧边栏快捷菜单**：
+  - 插件启用 / 安装时自动在苹果CMS后台「快捷菜单」（`application/extra/quickmenu.php`，旧版兼容 `application/data/config/quickmenu.txt`）注册「沫兮官替官解系统」入口，指向插件首页看板 `/index.php/addons/mxgt/admin/index`，无需手动添加菜单。
+  - 停用 / 卸载时自动移除该菜单，重复注册幂等（不产生重复条目）。
+  - 解决启用插件后找不到插件页面入口、在线更新入口无法访问的问题（在线更新功能位于插件配置页 `/index.php/addons/mxgt/admin/config`）。
 
 ### v0.0.8（2026-09-14）
 - **Logo 调整**：
