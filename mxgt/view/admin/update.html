@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>沫兮官替官解系统 - 版本信息</title>
+<title>沫兮官替官解系统 - 在线更新</title>
 <style>
     :root {
         --primary: #657A7F;
@@ -76,37 +76,35 @@
     .card-hd .ic.accent { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); }
     .card-bd { padding: 24px 22px; }
 
+    /* ===== 版本行 ===== */
     .ver-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 4px; border-bottom: 1px dashed var(--border); font-size: 14px; }
     .ver-row:last-of-type { border-bottom: none; }
     .ver-row .k { color: var(--muted); font-size: 13px; }
     .ver-row .v { font-weight: 700; color: var(--text); font-size: 16px; }
-    .ver-chip { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-    .ver-chip.cur { background: rgba(101,122,127,.14); color: var(--primary-dark); }
-    .ver-chip.latest { background: rgba(78,154,110,.14); color: var(--ok); }
-    .ver-chip.accent { background: rgba(184,107,116,.14); color: var(--accent-dark); }
-
     .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; color: #fff; font-weight: 600; }
     .badge-ok { background: var(--ok); }
     .badge-update { background: var(--accent); }
     .badge-err { background: var(--danger); }
 
-    .log-item { padding: 14px 4px; border-bottom: 1px dashed var(--border); }
-    .log-item:last-of-type { border-bottom: none; }
-    .log-item .lv { display: inline-block; font-size: 14px; font-weight: 700; color: var(--primary-dark); background: rgba(101,122,127,.1); padding: 2px 10px; border-radius: 6px; }
-    .log-item .lt { font-size: 12px; color: var(--muted); margin-left: 8px; font-weight: 400; }
-    .log-item ul { margin: 8px 0 0 20px; }
-    .log-item li { font-size: 13px; color: #5B666A; line-height: 1.9; }
-
+    /* ===== 按钮 ===== */
     .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; padding-top: 18px; border-top: 1px dashed var(--border); }
     .btn { display: inline-flex; align-items: center; justify-content: center; height: 42px; padding: 0 26px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .2s; }
-    .btn-primary { color: #fff; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); box-shadow: 0 4px 12px rgba(101,122,127,.32); }
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(101,122,127,.4); }
     .btn-accent { color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); box-shadow: 0 4px 12px rgba(184,107,116,.3); }
     .btn-accent:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(184,107,116,.38); }
     .btn-ghost { color: var(--primary); background: transparent; border: 1px solid var(--primary); }
     .btn-ghost:hover { background: rgba(101,122,127,.08); }
+    .hint { font-size: 12px; color: var(--muted); margin-top: 16px; line-height: 1.9; }
 
-    .tip { font-size: 12px; color: var(--muted); margin-top: 14px; line-height: 1.8; }
+    /* ===== 更新进度（圆形进度环） ===== */
+    .update-mask { display: none; position: fixed; inset: 0; background: rgba(30,38,40,.55); z-index: 9999; align-items: center; justify-content: center; }
+    .update-box { background: #fff; border-radius: 16px; padding: 30px 34px; width: 340px; max-width: 90%; text-align: center; box-shadow: 0 16px 48px rgba(0,0,0,.3); }
+    .upd-title { font-size: 16px; font-weight: 700; color: #333C3F; margin-bottom: 10px; }
+    .upd-msg { font-size: 12px; color: #8A9599; margin-bottom: 18px; min-height: 18px; }
+    .upd-ring-wrap { position: relative; width: 120px; margin: 4px auto 12px; }
+    .upd-svg { display: block; }
+    .upd-svg .upd-track { transition: none; }
+    .upd-svg .upd-bar { transition: stroke-dashoffset .3s ease; }
+    .upd-percent { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: #657A7F; }
 
     @media (max-width: 900px) {
         .shell { flex-direction: column; }
@@ -128,7 +126,7 @@
         <div class="side-logo">
             <img src="__STATIC__/addons/mxgt/logo.png" alt="logo" onerror="this.style.display='none'">
             <div class="side-title">沫兮官替官解系统</div>
-            <div class="side-sub">MacCMS Addon</div>
+            <div class="side-sub">Online Update</div>
         </div>
         <nav class="side-nav">
             <div class="side-grp">功能设置</div>
@@ -149,101 +147,123 @@
     <!-- 右侧内容 -->
     <main class="main">
         <div class="hero">
-            <div class="h-ic">📦</div>
-            <h1>版本信息</h1>
-            <p>当前插件版本与最新发行版对比，支持在线检查与一键更新。</p>
+            <div class="h-ic">🔄</div>
+            <h1>在线更新</h1>
+            <p>从当前 GitHub 仓库拉取最新发行版，一键检查与更新，全程圆形进度环实时显示。</p>
         </div>
 
         <div class="card">
-            <div class="card-hd"><span class="ic">📊</span>当前版本与最新版本</div>
+            <div class="card-hd"><span class="ic accent">🔄</span>在线更新</div>
             <div class="card-bd">
-                <div class="ver-row"><span class="k">当前版本</span><span class="v"><span class="ver-chip cur">v{$version|default='0.0.16'}</span></span></div>
+                <div class="ver-row"><span class="k">本地版本</span><span class="v">v{$vinfo.local_version|default='0.0.16'}</span></div>
                 <div class="ver-row">
-                    <span class="k">最新版本</span>
+                    <span class="k">远程版本</span>
                     <span class="v">
-                        {if condition="$vinfo.ok eq 1"}
-                            <span class="ver-chip latest">{$vinfo.remote_version}</span>
-                            {if condition="$vinfo.has_update eq 1"}<span class="badge badge-update" style="margin-left:8px;">发现新版本</span>{else /}<span class="badge badge-ok" style="margin-left:8px;">已是最新</span>{/if}
-                        {else /}<span style="color:var(--danger);font-size:12px;font-weight:400;">{$vinfo.msg}</span>{/if}
+                        {if condition="$vinfo.ok eq 1"}{$vinfo.remote_version}{else /}<span style="color:var(--danger);font-size:12px;font-weight:400;">{$vinfo.msg}</span>{/if}
                     </span>
+                </div>
+                <div class="ver-row">
+                    <span class="k">状态</span>
+                    <span>
+                        {if condition="$vinfo.ok eq 1"}
+                            {if condition="$vinfo.has_update eq 1"}<span class="badge badge-update">发现新版本</span>{else /}<span class="badge badge-ok">已是最新</span>{/if}
+                        {else /}<span class="badge badge-err">检查失败</span>{/if}
+                    </span>
+                </div>
+                <div class="ver-row">
+                    <span class="k">检查时间</span>
+                    <span class="v" style="font-weight:400;font-size:12px;color:var(--muted);">{$vinfo.time|date='Y-m-d H:i:s',###}</span>
                 </div>
                 <div class="ver-row">
                     <span class="k">更新分支</span>
                     <span class="v" style="font-size:13px;font-weight:400;color:var(--muted);">main（固定，不可更改）</span>
                 </div>
                 <div class="actions">
-                    <a class="btn btn-ghost" href="{:addon_url('mxgt/admin/config', ['check' => 1])}">检查更新</a>
-                    <a class="btn btn-accent" href="{:addon_url('mxgt/admin/update')}">在线更新</a>
+                    <a class="btn btn-ghost" href="{:addon_url('mxgt/admin/update', ['check' => 1])}">检查更新</a>
+                    <a class="btn btn-accent" href="javascript:void(0)" id="btn-update" onclick="startUpdate()">更新</a>
                 </div>
-                <div class="tip">「检查更新 / 在线更新」需将 mxthxt 文件夹部署在苹果CMS根目录（与 addons 同级）后方可使用；下载前自动对多镜像测速选优，圆形进度环实时显示进度。</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-hd"><span class="ic accent">📝</span>更新日志</div>
-            <div class="card-bd">
-                <div class="log-item">
-                    <span class="lv">v0.0.21</span><span class="lt">2026-09-15</span>
-                    <ul>
-                        <li>界面整体美化：渐变头部横幅 + 分组侧边栏（功能设置/系统）+ 精致卡片与表单，五个后台页面风格统一。</li>
-                    </ul>
-                </div>
-                <div class="log-item">
-                    <span class="lv">v0.0.20</span><span class="lt">2026-09-15</span>
-                    <ul>
-                        <li>新增「搜索设置 / 匹配设置 / JSON 调用」三个独立设置页（置于版本信息前），JSON 页含测试调用。</li>
-                    </ul>
-                </div>
-                <div class="log-item">
-                    <span class="lv">v0.0.19</span><span class="lt">2026-09-15</span>
-                    <ul>
-                        <li>在线更新支持强制更新：即使提示“已是最新”（镜像缓存滞后）也可一键强制拉取发行版覆盖；手动更新脚本浏览器访问默认强制。</li>
-                    </ul>
-                </div>
-                <div class="log-item">
-                    <span class="lv">v0.0.18</span><span class="lt">2026-09-15</span>
-                    <ul>
-                        <li>修复版本显示双 v（最新版本 vv0.0.17）：远程版本已含 v 前缀，模板不再重复拼接。</li>
-                    </ul>
-                </div>
-                <div class="log-item">
-                    <span class="lv">v0.0.17</span><span class="lt">2026-09-15</span>
-                    <ul>
-                        <li>修复登录「网络异常，请重试」：登录动作名大小写不匹配（doLogin/dologin）导致鉴权重定向；登录页增加非 JSON 响应定位提示。</li>
-                    </ul>
-                </div>
-                <div class="log-item">
-                    <span class="lv">v0.0.16</span><span class="lt">2026-09-15</span>
-                    <ul>
-                        <li>整理代码结构：mxthxt 分为 core / config / version 子目录，插件仅保留 mxgt 与 mxthxt 两目录。</li>
-                        <li>界面精简：只展示「当前版本 / 最新版本 / 更新日志」，移除运行状态；分支固定为 main 且后台默认隐藏不可更改。</li>
-                    </ul>
-                </div>
-                <div class="log-item">
-                    <span class="lv">v0.0.15</span><span class="lt">2026-09-15</span>
-                    <ul>
-                        <li>多镜像先测速再下载（自动选择最快镜像）。</li>
-                        <li>在线更新进度条改为 SVG 圆形进度环。</li>
-                    </ul>
-                </div>
-                <div class="log-item">
-                    <span class="lv">v0.0.14</span><span class="lt">2026-09-15</span>
-                    <ul>
-                        <li>修复「请求更新源失败」：检查与下载增加多镜像自动切换 + 官方源兜底。</li>
-                    </ul>
-                </div>
-                <div class="log-item">
-                    <span class="lv">v0.0.13</span><span class="lt">2026-09-15</span>
-                    <ul>
-                        <li>插件独立登录（弹窗登录卡片）。</li>
-                        <li>主界面改为左侧栏布局，侧边栏含「在线更新」。</li>
-                    </ul>
-                </div>
+                <div class="hint">点击「更新」将从当前 GitHub 仓库拉取最新发行版并覆盖 addons/mxgt 与 mxthxt，自动保留配置与启用状态；下载前自动对多镜像测速选优（圆形进度环实时显示）。即使提示“已是最新”（如镜像缓存滞后），点击「更新」也会强制重新拉取最新发行版覆盖。</div>
             </div>
         </div>
     </main>
-
 </div>
+
+<!-- 更新进度条（圆形进度环） -->
+<div class="update-mask" id="update-mask">
+    <div class="update-box">
+        <div class="upd-title" id="upd-title">正在在线更新...</div>
+        <div class="upd-msg" id="upd-msg">准备中</div>
+        <div class="upd-ring-wrap">
+            <svg class="upd-svg" width="120" height="120" viewBox="0 0 120 120">
+                <circle class="upd-track" cx="60" cy="60" r="52" fill="none" stroke="#E9EDEE" stroke-width="10"/>
+                <circle class="upd-bar" id="upd-ring" cx="60" cy="60" r="52" fill="none" stroke="url(#upd-grad)" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.73" stroke-dashoffset="326.73" transform="rotate(-90 60 60)"/>
+                <defs>
+                    <linearGradient id="upd-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#B86B74"/>
+                        <stop offset="100%" stop-color="#657A7F"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <div class="upd-percent" id="upd-percent">0%</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var UPDATE_URL = "{:addon_url('mxgt/admin/doUpdate', ['force' => 1])}";
+    var PROGRESS_URL = "{:addon_url('mxgt/admin/updateProgress')}";
+    var RELOAD_URL = "{:addon_url('mxgt/admin/update', ['check' => 1])}";
+
+    var RING_CIRC = 326.73; // 圆环周长 = 2π × 52
+
+    function setProgress(p, msg) {
+        p = p > 100 ? 100 : p;
+        var ring = document.getElementById('upd-ring');
+        if (ring) { ring.style.strokeDashoffset = RING_CIRC * (1 - p / 100); }
+        document.getElementById('upd-percent').textContent = p + '%';
+        document.getElementById('upd-msg').textContent = msg || '';
+    }
+
+    function startUpdate() {
+        if (!confirm('确定执行在线更新吗？更新前会自动备份当前代码。')) return;
+        var mask = document.getElementById('update-mask');
+        mask.style.display = 'flex';
+        setProgress(0, '准备中...');
+        var done = false;
+
+        var timer = setInterval(function () {
+            fetch(PROGRESS_URL).then(function (r) { return r.json(); }).then(function (d) {
+                if (done || !d) return;
+                if (d.step === 'error') {
+                    done = true; clearInterval(timer);
+                    setProgress(d.percent || 0, d.msg || '更新失败');
+                } else {
+                    setProgress(d.percent || 0, d.msg || '');
+                }
+            }).catch(function () {});
+        }, 600);
+
+        fetch(UPDATE_URL, { method: 'POST' }).then(function (r) { return r.json(); }).then(function (d) {
+            if (done) return;
+            done = true; clearInterval(timer);
+            if (d && d.code === 1) {
+                setProgress(100, d.msg || '更新完成');
+                setTimeout(function () { location.href = RELOAD_URL; }, 1500);
+            } else {
+                var msg = (d && d.msg) ? d.msg : '更新失败，请重试';
+                if (msg.indexOf('最新') !== -1 || msg.indexOf('无需') !== -1) {
+                    setProgress(100, msg);
+                    setTimeout(function () { document.getElementById('update-mask').style.display = 'none'; }, 1200);
+                } else {
+                    setProgress(0, msg);
+                }
+            }
+        }).catch(function () {
+            done = true; clearInterval(timer);
+            setProgress(0, '更新请求异常，请重试');
+        });
+    }
+</script>
 
 </body>
 </html>

@@ -349,6 +349,20 @@ class Admin extends Controller
     }
 
     /**
+     * 在线更新页（独立页面：版本对比 + 检查/更新按钮 + 圆形进度条）
+     * 原内嵌于「插件配置」页的在线更新面板拆分为独立页，配置页恢复单栏布局。
+     */
+    public function update()
+    {
+        $force = intval($this->request->get('check', 0));
+        $info = get_addon_info('mxgt');
+        $this->assign('version', isset($info['version']) ? $info['version'] : '');
+        $this->assign('vinfo', $this->cachedVersionCheck($force === 1));
+        $this->assign('active', 'update');
+        return $this->fetch('admin/update');
+    }
+
+    /**
      * 在线更新：检查 → 下载 → 备份 → 覆盖（依赖根目录 mxthxt 云端更新核心）
      * 全程向 runtime/mxthxt/update_progress.json 写入进度，前端轮询 updateProgress 显示进度条。
      * 支持 force=1 强制更新：即使远端判定“已是最新”（如镜像缓存滞后），

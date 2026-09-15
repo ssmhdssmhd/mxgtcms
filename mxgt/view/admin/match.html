@@ -132,7 +132,7 @@
             <div class="side-grp">系统</div>
             <a class="side-item {if condition="$active eq 'index'"}on{/if}" href="{:addon_url('mxgt/admin/index')}">版本信息</a>
             <a class="side-item {if condition="$active eq 'config'"}on{/if}" href="{:addon_url('mxgt/admin/config')}">插件配置</a>
-            <a class="side-item {if condition="$active eq 'update'"}on{/if}" href="{:addon_url('mxgt/admin/config')}#online-update">在线更新</a>
+            <a class="side-item {if condition="$active eq 'update'"}on{/if}" href="{:addon_url('mxgt/admin/update')}">在线更新</a>
         </nav>
         <div class="side-foot">
             <span>v{$version|default='0.0.16'}</span>
