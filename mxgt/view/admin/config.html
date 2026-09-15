@@ -21,12 +21,37 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: var(--bg); font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif; color: var(--text); padding: 20px; }
 
-    /* 顶部条 */
-    .topbar { display: flex; align-items: center; background: linear-gradient(120deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 10px; padding: 16px 22px; margin-bottom: 18px; color: #fff; box-shadow: 0 4px 14px rgba(101,122,127,.28); }
-    .topbar .logo { width: 40px; height: 40px; border-radius: 8px; margin-right: 14px; object-fit: cover; background: rgba(255,255,255,.18); }
-    .topbar h1 { font-size: 18px; font-weight: 600; }
-    .topbar .sub { font-size: 12px; opacity: .85; margin-top: 2px; }
-    .topbar .ver { margin-left: auto; background: rgba(255,255,255,.18); padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+    /* 整体框架：左侧栏 + 右侧内容 */
+    .shell { display: flex; gap: 18px; align-items: flex-start; min-height: calc(100vh - 40px); }
+    .main { flex: 1; min-width: 0; }
+    .page-hd { font-size: 18px; font-weight: 600; color: var(--primary-dark); margin-bottom: 14px; display: flex; align-items: center; }
+    .page-hd::before { content: ""; width: 4px; height: 16px; background: var(--primary); border-radius: 2px; margin-right: 8px; }
+
+    /* 左侧栏 */
+    .side {
+        width: 210px; flex-shrink: 0;
+        background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
+        border-radius: 10px; padding: 16px 12px; color: #fff;
+        display: flex; flex-direction: column; min-height: 560px;
+        box-shadow: 0 4px 14px rgba(101,122,127,.25);
+    }
+    .side-logo { text-align: center; padding: 6px 0 14px; border-bottom: 1px solid rgba(255,255,255,.18); margin-bottom: 12px; }
+    .side-logo img { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; background: rgba(255,255,255,.18); }
+    .side-title { font-size: 14px; font-weight: 600; margin-top: 8px; }
+    .side-sub { font-size: 11px; opacity: .8; margin-top: 2px; }
+    .side-item {
+        display: block; padding: 10px 14px; border-radius: 8px;
+        color: rgba(255,255,255,.92); font-size: 13px; text-decoration: none;
+        margin-bottom: 6px; transition: background .2s;
+    }
+    .side-item:hover { background: rgba(255,255,255,.14); }
+    .side-item.on { background: rgba(255,255,255,.22); font-weight: 600; }
+    .side-foot {
+        margin-top: auto; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.18);
+        display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: rgba(255,255,255,.85);
+    }
+    .side-logout { color: #fff; text-decoration: none; padding: 4px 10px; border-radius: 6px; background: rgba(255,255,255,.15); font-size: 12px; }
+    .side-logout:hover { background: rgba(255,255,255,.28); }
 
     .layout { display: flex; gap: 18px; align-items: flex-start; }
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 2px 8px rgba(51,60,63,.05); overflow: hidden; }
@@ -68,6 +93,12 @@
     .hint { font-size: 12px; color: var(--muted); margin-top: 14px; line-height: 1.8; }
 
     @media (max-width: 900px) {
+        .shell { flex-direction: column; }
+        .side { width: 100%; min-height: 0; flex-direction: row; flex-wrap: wrap; align-items: center; }
+        .side-logo { flex: 1; border-bottom: none; margin-bottom: 0; text-align: left; }
+        .side-nav { display: flex; gap: 6px; flex-wrap: wrap; }
+        .side-item { margin-bottom: 0; }
+        .side-foot { margin-top: 0; border-top: none; padding-top: 0; }
         .layout { flex-direction: column; }
         .col-config, .col-update { width: 100%; min-width: 0; }
     }
@@ -75,16 +106,31 @@
 </head>
 <body>
 
-<div class="topbar">
-    <img class="logo" src="__STATIC__/addons/mxgt/logo.png" alt="logo" onerror="this.style.display='none'">
-    <div>
-        <h1>沫兮官替官解系统</h1>
-        <div class="sub">Plugin Configuration</div>
-    </div>
-    <span class="ver">v{$vinfo.local_version|default='0.0.12'}</span>
-</div>
+<div class="shell">
 
-<div class="layout">
+    <!-- 左侧栏 -->
+    <aside class="side">
+        <div class="side-logo">
+            <img src="__STATIC__/addons/mxgt/logo.png" alt="logo" onerror="this.style.display='none'">
+            <div class="side-title">沫兮官替官解系统</div>
+            <div class="side-sub">Plugin Configuration</div>
+        </div>
+        <nav class="side-nav">
+            <a class="side-item {if condition="$active eq 'index'"}on{/if}" href="{:addon_url('mxgt/admin/index')}">首页看板</a>
+            <a class="side-item {if condition="$active eq 'config'"}on{/if}" href="{:addon_url('mxgt/admin/config')}">插件配置</a>
+            <a class="side-item {if condition="$active eq 'update'"}on{/if}" href="{:addon_url('mxgt/admin/config')}#online-update">在线更新</a>
+        </nav>
+        <div class="side-foot">
+            <span>v{$vinfo.local_version|default='0.0.13'}</span>
+            <a class="side-logout" href="{:addon_url('mxgt/admin/logout')}">退出登录</a>
+        </div>
+    </aside>
+
+    <!-- 右侧内容 -->
+    <main class="main">
+        <div class="page-hd">插件配置</div>
+
+        <div class="layout">
 
     <!-- 插件配置 -->
     <div class="card col-config">
@@ -124,10 +170,10 @@
     </div>
 
     <!-- 在线更新（配置旁边） -->
-    <div class="card col-update">
+    <div class="card col-update" id="online-update">
         <div class="card-hd">在线更新</div>
         <div class="card-bd">
-            <div class="ver-row"><span class="k">本地版本</span><span class="v">v{$vinfo.local_version|default='0.0.12'}</span></div>
+            <div class="ver-row"><span class="k">本地版本</span><span class="v">v{$vinfo.local_version|default='0.0.13'}</span></div>
             <div class="ver-row">
                 <span class="k">远程版本</span>
                 <span class="v">
@@ -154,6 +200,8 @@
         </div>
     </div>
 
+        </div>
+    </main>
 </div>
 
 <!-- 更新进度条 -->
@@ -180,6 +228,15 @@
     var UPDATE_URL = "{:addon_url('mxgt/admin/doUpdate')}";
     var PROGRESS_URL = "{:addon_url('mxgt/admin/updateProgress')}";
     var RELOAD_URL = "{:addon_url('mxgt/admin/config', ['check' => 1])}";
+
+    // 侧边栏「在线更新」跳转：加载后定位到更新面板
+    if (location.hash === '#online-update') {
+        var _t = setTimeout(function () {
+            var el = document.getElementById('online-update');
+            if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+            clearTimeout(_t);
+        }, 120);
+    }
 
     function setProgress(p, msg) {
         p = p > 100 ? 100 : p;

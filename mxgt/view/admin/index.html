@@ -21,11 +21,37 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: var(--bg); font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif; color: var(--text); padding: 20px; }
 
-    .topbar { display: flex; align-items: center; background: linear-gradient(120deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 10px; padding: 18px 22px; margin-bottom: 18px; color: #fff; box-shadow: 0 4px 14px rgba(101,122,127,.28); }
-    .topbar .logo { width: 44px; height: 44px; border-radius: 8px; margin-right: 14px; object-fit: cover; background: rgba(255,255,255,.18); }
-    .topbar h1 { font-size: 19px; font-weight: 600; }
-    .topbar .sub { font-size: 12px; opacity: .85; margin-top: 2px; }
-    .topbar .ver { margin-left: auto; background: rgba(255,255,255,.18); padding: 5px 14px; border-radius: 20px; font-size: 12px; }
+    /* 整体框架：左侧栏 + 右侧内容 */
+    .shell { display: flex; gap: 18px; align-items: flex-start; min-height: calc(100vh - 40px); }
+    .main { flex: 1; min-width: 0; }
+    .page-hd { font-size: 18px; font-weight: 600; color: var(--primary-dark); margin-bottom: 14px; display: flex; align-items: center; }
+    .page-hd::before { content: ""; width: 4px; height: 16px; background: var(--primary); border-radius: 2px; margin-right: 8px; }
+
+    /* 左侧栏 */
+    .side {
+        width: 210px; flex-shrink: 0;
+        background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
+        border-radius: 10px; padding: 16px 12px; color: #fff;
+        display: flex; flex-direction: column; min-height: 560px;
+        box-shadow: 0 4px 14px rgba(101,122,127,.25);
+    }
+    .side-logo { text-align: center; padding: 6px 0 14px; border-bottom: 1px solid rgba(255,255,255,.18); margin-bottom: 12px; }
+    .side-logo img { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; background: rgba(255,255,255,.18); }
+    .side-title { font-size: 14px; font-weight: 600; margin-top: 8px; }
+    .side-sub { font-size: 11px; opacity: .8; margin-top: 2px; }
+    .side-item {
+        display: block; padding: 10px 14px; border-radius: 8px;
+        color: rgba(255,255,255,.92); font-size: 13px; text-decoration: none;
+        margin-bottom: 6px; transition: background .2s;
+    }
+    .side-item:hover { background: rgba(255,255,255,.14); }
+    .side-item.on { background: rgba(255,255,255,.22); font-weight: 600; }
+    .side-foot {
+        margin-top: auto; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.18);
+        display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: rgba(255,255,255,.85);
+    }
+    .side-logout { color: #fff; text-decoration: none; padding: 4px 10px; border-radius: 6px; background: rgba(255,255,255,.15); font-size: 12px; }
+    .side-logout:hover { background: rgba(255,255,255,.28); }
 
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 2px 8px rgba(51,60,63,.05); overflow: hidden; margin-bottom: 16px; }
     .card-hd { padding: 14px 20px; border-bottom: 1px solid var(--border); font-size: 15px; font-weight: 600; color: var(--primary-dark); display: flex; align-items: center; }
@@ -55,79 +81,106 @@
     .desc { font-size: 13px; color: #5B666A; line-height: 2; }
     .desc b { color: var(--primary-dark); }
     .tip { font-size: 12px; color: var(--muted); margin-top: 10px; line-height: 1.8; }
+
+    @media (max-width: 900px) {
+        .shell { flex-direction: column; }
+        .side { width: 100%; min-height: 0; flex-direction: row; flex-wrap: wrap; align-items: center; }
+        .side-logo { flex: 1; border-bottom: none; margin-bottom: 0; text-align: left; }
+        .side-nav { display: flex; gap: 6px; flex-wrap: wrap; }
+        .side-item { margin-bottom: 0; }
+        .side-foot { margin-top: 0; border-top: none; padding-top: 0; }
+    }
 </style>
 </head>
 <body>
 
-<div class="topbar">
-    <img class="logo" src="__STATIC__/addons/mxgt/logo.png" alt="logo" onerror="this.style.display='none'">
-    <div>
-        <h1>沫兮官替官解系统</h1>
-        <div class="sub">MacCMS Addon · 官方替换 / 官方解析</div>
-    </div>
-    <span class="ver">v{$version|default='0.0.10'}</span>
-</div>
+<div class="shell">
 
-<div class="card">
-    <div class="card-hd">运行状态</div>
-    <div class="card-bd">
-        <div class="grid">
-            <div class="stat">
-                <div class="k">本地版本</div>
-                <div class="v">v{$version|default='0.0.5'}
-                    {if condition="$vinfo.ok eq 1"}
-                    <small>（远程：v{$vinfo.remote_version}）</small>
+    <!-- 左侧栏 -->
+    <aside class="side">
+        <div class="side-logo">
+            <img src="__STATIC__/addons/mxgt/logo.png" alt="logo" onerror="this.style.display='none'">
+            <div class="side-title">沫兮官替官解系统</div>
+            <div class="side-sub">MacCMS Addon</div>
+        </div>
+        <nav class="side-nav">
+            <a class="side-item {if condition="$active eq 'index'"}on{/if}" href="{:addon_url('mxgt/admin/index')}">首页看板</a>
+            <a class="side-item {if condition="$active eq 'config'"}on{/if}" href="{:addon_url('mxgt/admin/config')}">插件配置</a>
+            <a class="side-item {if condition="$active eq 'update'"}on{/if}" href="{:addon_url('mxgt/admin/config')}#online-update">在线更新</a>
+        </nav>
+        <div class="side-foot">
+            <span>v{$version|default='0.0.13'}</span>
+            <a class="side-logout" href="{:addon_url('mxgt/admin/logout')}">退出登录</a>
+        </div>
+    </aside>
+
+    <!-- 右侧内容 -->
+    <main class="main">
+        <div class="page-hd">首页看板</div>
+
+        <div class="card">
+            <div class="card-hd">运行状态</div>
+            <div class="card-bd">
+                <div class="grid">
+                    <div class="stat">
+                        <div class="k">本地版本</div>
+                        <div class="v">v{$version|default='0.0.13'}
+                            {if condition="$vinfo.ok eq 1"}
+                            <small>（远程：v{$vinfo.remote_version}）</small>
+                            {/if}
+                        </div>
+                    </div>
+                    <div class="stat">
+                        <div class="k">版本状态</div>
+                        <div class="v">
+                            {if condition="$vinfo.ok eq 1"}
+                                {if condition="$vinfo.has_update eq 1"}<span class="badge badge-update">发现新版本</span>{else /}<span class="badge badge-ok">已是最新</span>{/if}
+                            {else /}<span class="badge badge-err">检查失败</span>{/if}
+                            {if condition="$state eq 1"}<span class="badge badge-ok" style="margin-left:6px;">已启用</span>{else /}<span class="badge badge-muted" style="margin-left:6px;">已停用</span>{/if}
+                        </div>
+                    </div>
+                    <div class="stat">
+                        <div class="k">数据状态</div>
+                        <div class="v">{if condition="$meta_installed eq 1"}<span class="badge badge-ok">就绪</span>{else /}<span class="badge badge-err">未初始化</span>{/if}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="k">云端更新组件</div>
+                        <div class="v">{if condition="$update_core_exists eq 1"}<span class="badge badge-ok">已部署</span>{else /}<span class="badge badge-err">未部署</span>{/if}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="k">更新源</div>
+                        <div class="v">{$update_source|default='mirror'}</div>
+                    </div>
+                    {if condition="!empty($installed_at)"}
+                    <div class="stat">
+                        <div class="k">安装时间</div>
+                        <div class="v">{$installed_at}</div>
+                    </div>
                     {/if}
                 </div>
-            </div>
-            <div class="stat">
-                <div class="k">版本状态</div>
-                <div class="v">
-                    {if condition="$vinfo.ok eq 1"}
-                        {if condition="$vinfo.has_update eq 1"}<span class="badge badge-update">发现新版本</span>{else /}<span class="badge badge-ok">已是最新</span>{/if}
-                    {else /}<span class="badge badge-err">检查失败</span>{/if}
-                    {if condition="$state eq 1"}<span class="badge badge-ok" style="margin-left:6px;">已启用</span>{else /}<span class="badge badge-muted" style="margin-left:6px;">已停用</span>{/if}
+                <div class="actions">
+                    <a class="btn" href="{:addon_url('mxgt/admin/config')}">插件配置</a>
+                    <a class="btn btn-ghost" href="{:addon_url('mxgt/admin/checkUpdate')}">检查更新</a>
+                    <a class="btn btn-accent" href="{:addon_url('mxgt/admin/config')}#online-update">在线更新</a>
                 </div>
+                <div class="tip">「检查更新 / 在线更新」需将 mxthxt 文件夹部署在苹果CMS根目录（与 addons 同级）后方可使用；在线更新过程实时显示进度。</div>
             </div>
-            <div class="stat">
-                <div class="k">数据状态</div>
-                <div class="v">{if condition="$meta_installed eq 1"}<span class="badge badge-ok">就绪</span>{else /}<span class="badge badge-err">未初始化</span>{/if}</div>
-            </div>
-            <div class="stat">
-                <div class="k">云端更新组件</div>
-                <div class="v">{if condition="$update_core_exists eq 1"}<span class="badge badge-ok">已部署</span>{else /}<span class="badge badge-err">未部署</span>{/if}</div>
-            </div>
-            <div class="stat">
-                <div class="k">更新源</div>
-                <div class="v">{$update_source|default='mirror'}</div>
-            </div>
-            {if condition="!empty($installed_at)"}
-            <div class="stat">
-                <div class="k">安装时间</div>
-                <div class="v">{$installed_at}</div>
-            </div>
-            {/if}
         </div>
-        <div class="actions">
-            <a class="btn" href="{:addon_url('mxgt/admin/config')}">插件配置</a>
-            <a class="btn btn-ghost" href="{:addon_url('mxgt/admin/checkUpdate')}">检查更新</a>
-            <a class="btn btn-accent" href="javascript:void(0)" id="btn-update" onclick="startUpdate()">在线更新</a>
-        </div>
-        <div class="tip">「检查更新 / 在线更新」需将 mxthxt 文件夹部署在苹果CMS根目录（与 addons 同级）后方可使用；在线更新过程实时显示进度。</div>
-    </div>
-</div>
 
-<div class="card">
-    <div class="card-hd">插件说明</div>
-    <div class="card-bd">
-        <p class="desc">
-            沫兮官替官解系统可在新版苹果CMS后台完美使用，支持在线更新，国内用户可通过 GitHub 镜像进行远程更新。
-            插件部署要求：<br>
-            1. <b>mxgt</b> 文件夹必须放在苹果CMS的 <b>addons</b> 目录内，才能被正确启用和加载；<br>
-            2. <b>mxthxt</b> 文件夹必须放在苹果CMS <b>根目录</b>（与 addons 同级）。<br>
-            更多信息请参见项目 README.md。
-        </p>
-    </div>
+        <div class="card">
+            <div class="card-hd">插件说明</div>
+            <div class="card-bd">
+                <p class="desc">
+                    沫兮官替官解系统可在新版苹果CMS后台完美使用，支持在线更新，国内用户可通过 GitHub 镜像进行远程更新。
+                    插件部署要求：<br>
+                    1. <b>mxgt</b> 文件夹必须放在苹果CMS的 <b>addons</b> 目录内，才能被正确启用和加载；<br>
+                    2. <b>mxthxt</b> 文件夹必须放在苹果CMS <b>根目录</b>（与 addons 同级）。<br>
+                    更多信息请参见项目 README.md。
+                </p>
+            </div>
+        </div>
+    </main>
+
 </div>
 
 <!-- 更新进度条 -->

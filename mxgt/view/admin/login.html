@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>沫兮官替官解系统 - 登录</title>
+<style>
+    :root {
+        --primary: #657A7F;
+        --primary-dark: #54686D;
+        --accent: #B86B74;
+        --accent-dark: #A05A63;
+        --bg: #F2F4F5;
+        --card: #FFFFFF;
+        --border: #E2E7E9;
+        --text: #333C3F;
+        --muted: #8A9599;
+        --danger: #C2504F;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        min-height: 100vh;
+        background: linear-gradient(135deg, rgba(101,122,127,.95) 0%, rgba(84,104,109,.92) 55%, rgba(184,107,116,.85) 130%);
+        font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+        display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .login-card {
+        width: 380px; max-width: 100%;
+        background: var(--card); border-radius: 14px;
+        box-shadow: 0 18px 50px rgba(20,28,30,.35);
+        padding: 34px 34px 26px;
+        animation: pop .25s ease;
+    }
+    @keyframes pop { from { transform: scale(.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .login-head { text-align: center; margin-bottom: 24px; }
+    .login-head .logo { width: 56px; height: 56px; border-radius: 12px; object-fit: cover; margin-bottom: 10px; background: var(--bg); }
+    .login-head h1 { font-size: 18px; color: var(--text); }
+    .login-head p { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .form-item { margin-bottom: 16px; }
+    .form-item label { display: block; font-size: 13px; color: var(--text); font-weight: 600; margin-bottom: 6px; }
+    .form-item input {
+        width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px;
+        font-size: 14px; color: var(--text); outline: none; transition: all .2s;
+    }
+    .form-item input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(101,122,127,.12); }
+    .btn {
+        width: 100%; padding: 11px; border: none; border-radius: 6px;
+        font-size: 15px; font-weight: 600; color: #fff; cursor: pointer;
+        background: linear-gradient(120deg, var(--primary) 0%, var(--primary-dark) 100%);
+        transition: opacity .2s;
+    }
+    .btn:hover { opacity: .9; }
+    .btn:disabled { opacity: .6; cursor: not-allowed; }
+    .err { display: none; margin-top: 14px; padding: 9px 12px; background: #FBF0F0; border: 1px solid #EAC6C6; color: var(--danger); border-radius: 6px; font-size: 12px; }
+    .err.show { display: block; }
+    .tip { text-align: center; font-size: 12px; color: var(--muted); margin-top: 16px; line-height: 1.7; }
+</style>
+</head>
+<body>
+
+<div class="login-card">
+    <div class="login-head">
+        <img class="logo" src="__STATIC__/addons/mxgt/logo.png" alt="logo" onerror="this.style.display='none'">
+        <h1>沫兮官替官解系统</h1>
+        <p>请登录后使用</p>
+    </div>
+    <form id="login-form" onsubmit="return doLogin(event)">
+        <div class="form-item">
+            <label>用户名</label>
+            <input type="text" name="username" id="username" autocomplete="username" placeholder="请输入用户名" required>
+        </div>
+        <div class="form-item">
+            <label>密码</label>
+            <input type="password" name="password" id="password" autocomplete="current-password" placeholder="请输入密码" required>
+        </div>
+        <button type="submit" class="btn" id="btn-login">登 录</button>
+        <div class="err" id="err"></div>
+    </form>
+    <div class="tip">默认账号见「插件配置 → 插件登录账号 / 插件登录密码」</div>
+</div>
+
+<script>
+    var LOGIN_URL = "{:addon_url('mxgt/admin/doLogin')}";
+    var INDEX_URL = "{:addon_url('mxgt/admin/index')}";
+
+    function showErr(msg) {
+        var e = document.getElementById('err');
+        e.textContent = msg;
+        e.classList.add('show');
+    }
+
+    function doLogin(ev) {
+        ev.preventDefault();
+        var btn = document.getElementById('btn-login');
+        btn.disabled = true; btn.textContent = '登录中...';
+        var fd = new FormData(document.getElementById('login-form'));
+        fetch(LOGIN_URL, { method: 'POST', body: fd }).then(function (r) { return r.json(); }).then(function (d) {
+            btn.disabled = false; btn.textContent = '登 录';
+            if (d && d.code === 1) {
+                location.href = INDEX_URL;
+            } else {
+                showErr((d && d.msg) ? d.msg : '登录失败，请重试');
+            }
+        }).catch(function () {
+            btn.disabled = false; btn.textContent = '登 录';
+            showErr('网络异常，请重试');
+        });
+        return false;
+    }
+</script>
+
+</body>
+</html>

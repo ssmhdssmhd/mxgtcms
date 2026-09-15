@@ -35,6 +35,56 @@ class Admin extends Controller
                 self::deny('无权访问该插件');
             }
         }
+
+        // 插件独立登录校验：未登录时（登录/退出动作除外）一律跳转到弹窗登录页
+        $action = strtolower($this->request->action());
+        if (session('mxgt_login') !== 1 && !in_array($action, ['login', 'doLogin', 'logout'], true)) {
+            $this->redirect(addon_url('mxgt/admin/login'));
+            exit;
+        }
+    }
+
+    /**
+     * 插件独立登录页（弹窗式，展示于苹果CMS后台右侧内容区）
+     */
+    public function login()
+    {
+        if (session('mxgt_login') === 1) {
+            $this->redirect(addon_url('mxgt/admin/index'));
+        }
+        return $this->fetch('admin/login');
+    }
+
+    /**
+     * 插件独立登录校验（AJAX，返回 JSON）
+     * 账号密码读取插件配置：login_user / login_pass；两者均为空时视为免密登录
+     */
+    public function doLogin()
+    {
+        if (!$this->request->isPost()) {
+            $this->jsonOut(['code' => 0, 'msg' => '非法请求']);
+        }
+        $username = trim((string) $this->request->post('username'));
+        $password = (string) $this->request->post('password');
+
+        $cfg = get_addon_config('mxgt');
+        $cu = isset($cfg['login_user']) ? trim((string) $cfg['login_user']) : 'admin';
+        $cp = isset($cfg['login_pass']) ? (string) $cfg['login_pass'] : 'admin888';
+
+        if (($cu === '' && $cp === '') || ($username === $cu && $password === $cp)) {
+            session('mxgt_login', 1);
+            $this->jsonOut(['code' => 1, 'msg' => '登录成功']);
+        }
+        $this->jsonOut(['code' => 0, 'msg' => '用户名或密码错误']);
+    }
+
+    /**
+     * 退出插件独立登录
+     */
+    public function logout()
+    {
+        session('mxgt_login', null);
+        $this->success('已退出登录', addon_url('mxgt/admin/login'));
     }
 
     /**
@@ -89,6 +139,7 @@ class Admin extends Controller
         $this->assign('update_source', isset($cfg['update_source']) ? $cfg['update_source'] : '');
         // 版本对比信息（本地 vs 远程，带缓存）
         $this->assign('vinfo', $this->cachedVersionCheck());
+        $this->assign('active', 'index');
         return $this->fetch('admin/index');
     }
 
@@ -124,6 +175,7 @@ class Admin extends Controller
         $force = intval($this->request->get('check', 0));
         $this->assign('vinfo', $this->cachedVersionCheck($force === 1));
         $this->assign('config', get_addon_fullconfig('mxgt'));
+        $this->assign('active', 'config');
         return $this->fetch('admin/config');
     }
 
