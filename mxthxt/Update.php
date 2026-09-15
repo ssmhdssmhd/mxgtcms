@@ -36,6 +36,7 @@ class MxthxtUpdate
      * 检查更新
      * 优先使用 GitHub Releases 发行版中上传的更新包资产（asset）；
      * 未匹配到资产时回退到源码 zip（zipball）。
+     * 国内镜像源下自动按候选镜像列表依次尝试，全部失败后回退 GitHub 官方源直连。
      * @param string $localVersion 本地插件版本号，如 v0.0.1
      * @param string $source       更新源：github / mirror / custom
      * @param string $repo         GitHub 仓库，格式 用户名/仓库名
@@ -44,19 +45,35 @@ class MxthxtUpdate
      */
     public function check($localVersion = '', $source = 'mirror', $repo = '', $customUrl = '')
     {
-        $apiUrl = $this->buildApiUrl($source, $repo, $customUrl);
-        if (empty($apiUrl)) {
+        $endpoints = $this->buildApiEndpoints($source, $repo, $customUrl);
+        if (empty($endpoints)) {
             return $this->fail('更新源配置不完整：请填写 GitHub 仓库或自定义更新地址');
         }
 
-        $json = $this->httpGet($apiUrl);
-        if ($json === false) {
-            return $this->fail('请求更新源失败，请检查服务器外网与更新源地址');
+        $json = false;
+        $data = null;
+        $lastErr = '请求更新源失败，请检查服务器外网与更新源地址';
+        foreach ($endpoints as $ep) {
+            $json = $this->httpGet($ep);
+            if ($json === false) {
+                $lastErr = '请求更新源失败：' . $ep;
+                continue;
+            }
+            $tmp = json_decode($json, true);
+            if (is_array($tmp) && !empty($tmp['tag_name'])) {
+                $data = $tmp;
+                break;
+            }
+            // 非目标数据（限流/错误页等）：记录原因并继续尝试下一个地址
+            if (is_array($tmp) && !empty($tmp['message']) && stripos((string) $tmp['message'], 'rate limit') !== false) {
+                $lastErr = '更新源接口触发限流（Rate Limit）：' . $ep;
+            } else {
+                $lastErr = '更新源返回数据异常：' . $ep;
+            }
+            $json = false;
         }
-
-        $data = json_decode($json, true);
-        if (!is_array($data) || empty($data['tag_name'])) {
-            return $this->fail('更新源返回数据异常，请稍后重试');
+        if ($data === null) {
+            return $this->fail($lastErr);
         }
 
         $latestVersion = ltrim(trim($data['tag_name']), 'vV');
@@ -108,6 +125,7 @@ class MxthxtUpdate
      * 下载更新包到 runtime/mxthxt/，返回本地文件路径
      * 传入 $progressFile 时（如 runtime/mxthxt/update_progress.json），下载期间
      * 持续向该文件写入进度（step=download, percent 0-85），供前端轮询显示进度条。
+     * 国内镜像源下按候选镜像前缀依次尝试，全部失败后回退 GitHub 官方直连。
      * @param string $zipballUrl   更新包下载地址（GitHub 发行版资产或 zipball）
      * @param string $source       更新源：github / mirror / custom
      * @param string $progressFile 进度文件绝对路径（可选）
@@ -120,34 +138,49 @@ class MxthxtUpdate
             return $this->fail('更新包下载地址为空');
         }
 
-        // 国内镜像：给 GitHub 官方下载地址加镜像前缀加速
+        // 构造候选下载地址：镜像源时依次尝试多个镜像前缀，最后回退官方直连
+        $urls = array($url);
         if ($source === 'mirror' && strpos($url, 'https://github.com') === 0) {
-            $prefix = isset($this->config['mirror_download_prefix']) ? (string) $this->config['mirror_download_prefix'] : 'https://mirror.ghproxy.com/';
-            $url = $prefix . $url;
+            $prefixes = (isset($this->config['mirror_download_prefixes']) && is_array($this->config['mirror_download_prefixes']))
+                ? $this->config['mirror_download_prefixes']
+                : array(isset($this->config['mirror_download_prefix']) ? $this->config['mirror_download_prefix'] : '');
+            $prefixes = array_values(array_filter(array_map('trim', $prefixes), 'strlen'));
+            if (empty($prefixes) && isset($this->config['mirror_download_prefix'])) {
+                $prefixes = array(trim((string) $this->config['mirror_download_prefix']));
+            }
+            $urls = array();
+            foreach ($prefixes as $p) {
+                $urls[] = $p . $url;
+            }
+            $urls[] = $url; // 最后直连 GitHub 官方
         }
 
         $dir = $this->runtimeDir();
         $save = $dir . 'update_' . date('YmdHis') . '.zip';
 
-        if ($progressFile !== '') {
-            // 带进度：curl 下载到文件并实时写进度
-            $this->writeProgressFile($progressFile, 'download', 8, '开始下载更新包...');
-            $ok = $this->httpDownloadToFile($url, $save, $progressFile);
-            if ($ok) {
-                $this->writeProgressFile($progressFile, 'download', 85, '下载完成，准备应用更新...');
+        $ok = false;
+        foreach ($urls as $u) {
+            if ($progressFile !== '') {
+                // 带进度：curl 下载到文件并实时写进度
+                $this->writeProgressFile($progressFile, 'download', 8, '正在下载更新包（' . $this->shortHost($u) . '）...');
+                $ok = $this->httpDownloadToFile($u, $save, $progressFile);
+                if ($ok) {
+                    $this->writeProgressFile($progressFile, 'download', 85, '下载完成，准备应用更新...');
+                }
+            } else {
+                // 无进度：沿用原逻辑（整包读入内存后落盘）
+                $body = $this->httpGet($u);
+                $ok = ($body !== false && $body !== '');
+                if ($ok) {
+                    $ok = @file_put_contents($save, $body) !== false;
+                }
             }
-        } else {
-            // 无进度：沿用原逻辑（整包读入内存后落盘）
-            $body = $this->httpGet($url);
-            $ok = ($body !== false && $body !== '');
             if ($ok) {
-                $ok = @file_put_contents($save, $body) !== false;
+                return array('code' => 1, 'path' => $save, 'msg' => '更新包下载完成');
             }
+            @unlink($save); // 清理本次失败残留，尝试下一个地址
         }
-        if (!$ok) {
-            return $this->fail('更新包下载失败，请检查服务器外网与更新源地址');
-        }
-        return ['code' => 1, 'path' => $save, 'msg' => '更新包下载完成'];
+        return $this->fail('更新包下载失败，请检查服务器外网与更新源地址');
     }
 
     /**
@@ -237,13 +270,18 @@ class MxthxtUpdate
     }
 
     /**
-     * 根据更新源构建更新信息接口地址
+     * 根据更新源构建更新信息接口候选地址列表（按顺序尝试）
+     * - custom：仅自定义地址；
+     * - github：官方源直连；
+     * - mirror：候选镜像列表，全部失败后由调用方回退官方源（末尾追加官方源）。
+     * @return array 接口地址列表
      */
-    protected function buildApiUrl($source, $repo, $customUrl)
+    protected function buildApiEndpoints($source, $repo, $customUrl)
     {
         $source = $source ?: 'mirror';
         if ($source === 'custom') {
-            return trim($customUrl);
+            $url = trim($customUrl);
+            return $url !== '' ? array($url) : array();
         }
 
         $repo = trim($repo);
@@ -251,18 +289,45 @@ class MxthxtUpdate
             $repo = isset($this->config['github_repo']) ? $this->config['github_repo'] : '';
         }
         if (empty($repo)) {
-            return '';
+            return array();
         }
 
-        $tpl = $source === 'github'
-            ? (isset($this->config['github_api_url']) ? $this->config['github_api_url'] : 'https://api.github.com/repos/{repo}/releases/latest')
-            : (isset($this->config['mirror_api_url']) ? $this->config['mirror_api_url'] : 'https://mirror.ghproxy.com/https://api.github.com/repos/{repo}/releases/latest');
+        $official = isset($this->config['github_api_url']) ? $this->config['github_api_url'] : 'https://api.github.com/repos/{repo}/releases/latest';
+        if ($source === 'github') {
+            return array(str_replace('{repo}', $repo, $official));
+        }
 
-        return str_replace('{repo}', $repo, $tpl);
+        // mirror：候选镜像列表（兼容旧版单值 mirror_api_url）
+        $list = (isset($this->config['mirror_api_urls']) && is_array($this->config['mirror_api_urls']))
+            ? $this->config['mirror_api_urls']
+            : array(isset($this->config['mirror_api_url']) ? $this->config['mirror_api_url'] : '');
+        $list = array_values(array_filter(array_map('trim', $list), 'strlen'));
+        if (empty($list) && isset($this->config['mirror_api_url'])) {
+            $list = array(trim((string) $this->config['mirror_api_url']));
+        }
+
+        $endpoints = array();
+        foreach ($list as $tpl) {
+            $endpoints[] = str_replace('{repo}', $repo, $tpl);
+        }
+        $endpoints[] = str_replace('{repo}', $repo, $official); // 末尾回退官方源直连
+        return $endpoints;
+    }
+
+    /**
+     * 提取 URL 主机名（用于进度提示，避免暴露完整下载地址）
+     * @param string $url
+     * @return string
+     */
+    protected function shortHost($url)
+    {
+        $host = parse_url((string) $url, PHP_URL_HOST);
+        return ($host !== null && $host !== false && $host !== '') ? (string) $host : (string) $url;
     }
 
     /**
      * HTTP GET 请求（优先 cURL，其次 file_get_contents）
+     * 自动跟随重定向，并区分“连接超时”与“读取超时”，提升各镜像源兼容性。
      * @return string|false
      */
     protected function httpGet($url)
@@ -272,9 +337,12 @@ class MxthxtUpdate
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
             curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_MAXREDIRS, 3);
             curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (MxgtUpdate)');
             $body = curl_exec($ch);
             $errno = curl_errno($ch);

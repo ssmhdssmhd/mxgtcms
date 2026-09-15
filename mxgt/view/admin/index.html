@@ -109,7 +109,7 @@
             <a class="side-item {if condition="$active eq 'update'"}on{/if}" href="{:addon_url('mxgt/admin/config')}#online-update">在线更新</a>
         </nav>
         <div class="side-foot">
-            <span>v{$version|default='0.0.13'}</span>
+            <span>v{$version|default='0.0.14'}</span>
             <a class="side-logout" href="{:addon_url('mxgt/admin/logout')}">退出登录</a>
         </div>
     </aside>
@@ -124,7 +124,7 @@
                 <div class="grid">
                     <div class="stat">
                         <div class="k">本地版本</div>
-                        <div class="v">v{$version|default='0.0.13'}
+                        <div class="v">v{$version|default='0.0.14'}
                             {if condition="$vinfo.ok eq 1"}
                             <small>（远程：v{$vinfo.remote_version}）</small>
                             {/if}

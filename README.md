@@ -2,7 +2,7 @@
 
 > 项目名称：沫兮官替官解系统
 > 项目代号：mxgtcms
-> 当前版本：v0.0.13
+> 当前版本：v0.0.14
 > 更新日期：2026-09-15
 
 ---
@@ -113,8 +113,10 @@
 | 源 | 说明 |
 | ---- | ---- |
 | GitHub 官方源 | `api.github.com` 直连，适合海外/直连用户 |
-| 国内镜像源 | 默认使用 `ghproxy` 等镜像加速（含下载加速），国内用户推荐 |
+| 国内镜像源 | 默认按候选镜像自动切换（`ghfast.top` / `gh-proxy.com` / `ghproxy.net` / `mirror.ghproxy.com`），全部失败后自动回退官方源直连；下载同样多镜像自动切换 |
 | 自定义源 | 支持填写自定义更新接口地址（需返回含 `tag_name` 与 `assets`/`zipball_url` 的 JSON） |
+
+> 镜像候选列表可在 `mxthxt/config.php` 的 `mirror_api_urls` / `mirror_download_prefixes` 中维护，无需改代码即可增删镜像。
 
 ### 3.4 发布新版本（维护者）
 1. 更新 `mxgt/info.ini` 的 `version` 与 README 版本日志。
@@ -160,6 +162,7 @@ https://github.com/ssmhdssmhd/mxgtcms/releases
 
 | 版本 | 更新包文件名 | 发布时间 | 更新说明 | 下载 |
 | ---- | ---- | ---- | ---- | ---- |
+| v0.0.14 | `mxgtcms.v0.0.14 202609151900.zip` | 2026-09-15 | 修复「请求更新源失败」：检查与下载增加多镜像自动切换 + 官方源兜底（含 ghfast/gh-proxy/ghproxy.net 等） | Releases 页 |
 | v0.0.13 | `mxgtcms.v0.0.13 202609151830.zip` | 2026-09-15 | 插件独立登录（点击侧边栏入口弹登录卡片）+ 主界面改为左侧栏布局，侧边栏含「在线更新」 | Releases 页 |
 | v0.0.12 | `mxgtcms.v0.0.12 202609151700.zip` | 2026-09-15 | 插件内新增手动更新脚本 `mxgt/manual_update.php`，自动更新不可用时可在服务器上一键手动更新 | Releases 页 |
 | v0.0.11 | `mxgtcms.v0.0.11 202609151530.zip` | 2026-09-15 | 插件配置页新增一键「更新」按钮：常显，点击即可从当前 GitHub 仓库拉取最新发行版（已是最新时友好提示） | Releases 页 |
@@ -193,6 +196,14 @@ https://github.com/ssmhdssmhd/mxgtcms/releases
 ---
 
 ## 五、版本更新日志
+
+### v0.0.14（2026-09-15）
+- **修复「请求更新源失败，请检查服务器外网与更新源地址」**：
+  - 原默认镜像 `mirror.ghproxy.com` 已失效，导致国内服务器在线更新检查/下载全部失败；本次为**检查与下载增加多镜像自动切换**。
+  - 更新源检查按候选镜像依次尝试：`ghfast.top` → `gh-proxy.com` → `ghproxy.net` → `mirror.ghproxy.com`，全部失败后**自动回退 GitHub 官方源直连**；任一路径成功即继续。
+  - 更新包下载同样按候选镜像前缀依次尝试，最后回退官方直连；失败自动清理残留并尝试下一个地址。
+  - HTTP 请求增加连接超时与重定向跟随；区分「网络失败 / 返回数据异常 / GitHub API 限流（Rate Limit）」的报错提示，便于定位问题。
+  - 镜像候选列表可在 `mxthxt/config.php` 的 `mirror_api_urls` / `mirror_download_prefixes` 中维护。
 
 ### v0.0.13（2026-09-15）
 - **插件独立登录（弹窗式登录页）**：

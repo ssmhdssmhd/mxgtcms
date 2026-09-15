@@ -10,10 +10,24 @@ return [
     'github_repo' => 'ssmhdssmhd/mxgtcms',
     // GitHub 官方源地址模板
     'github_api_url' => 'https://api.github.com/repos/{repo}/releases/latest',
-    // 国内镜像源地址模板（ghproxy，国内用户加速）
+    // 国内镜像源地址模板（默认，兼容旧配置）
     'mirror_api_url' => 'https://mirror.ghproxy.com/https://api.github.com/repos/{repo}/releases/latest',
-    // 国内镜像下载前缀（给 GitHub 官方下载地址加此前缀加速）
+    // 国内镜像 API 地址候选列表（按顺序尝试，失败自动切换下一个；全部失败后自动回退官方源直连）
+    'mirror_api_urls' => [
+        'https://ghfast.top/https://api.github.com/repos/{repo}/releases/latest',
+        'https://gh-proxy.com/https://api.github.com/repos/{repo}/releases/latest',
+        'https://ghproxy.net/https://api.github.com/repos/{repo}/releases/latest',
+        'https://mirror.ghproxy.com/https://api.github.com/repos/{repo}/releases/latest',
+    ],
+    // 国内镜像下载前缀（默认，兼容旧配置）
     'mirror_download_prefix' => 'https://mirror.ghproxy.com/',
+    // 国内镜像下载前缀候选列表（按顺序尝试，失败自动切换下一个；全部失败后回退 GitHub 官方直连）
+    'mirror_download_prefixes' => [
+        'https://ghfast.top/',
+        'https://gh-proxy.com/',
+        'https://ghproxy.net/',
+        'https://mirror.ghproxy.com/',
+    ],
     // 更新包命名规则：{插件名称}.{版本号} {yyyyMMddHHmm}，例如 mxgtcms.v0.0.4 202609142255.zip
     'package_pattern' => 'mxgtcms.{version} {date}.zip',
     // 发行版资产名前缀：在线更新时在 GitHub Release 资产中按此前缀匹配更新包 zip
