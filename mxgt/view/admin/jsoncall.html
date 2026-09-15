@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>沫兮官替官解系统 - JSON 调用</title>
+<style>
+    :root {
+        --primary: #657A7F;
+        --primary-dark: #54686D;
+        --accent: #B86B74;
+        --accent-dark: #A05A63;
+        --bg: #F2F4F5;
+        --card: #FFFFFF;
+        --border: #E2E7E9;
+        --text: #333C3F;
+        --muted: #8A9599;
+        --danger: #C2504F;
+        --ok: #5FA878;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif; color: var(--text); padding: 20px; }
+
+    .shell { display: flex; gap: 18px; align-items: flex-start; min-height: calc(100vh - 40px); }
+    .main { flex: 1; min-width: 0; }
+    .page-hd { font-size: 18px; font-weight: 600; color: var(--primary-dark); margin-bottom: 14px; display: flex; align-items: center; }
+    .page-hd::before { content: ""; width: 4px; height: 16px; background: var(--primary); border-radius: 2px; margin-right: 8px; }
+
+    /* 左侧栏 */
+    .side {
+        width: 210px; flex-shrink: 0;
+        background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
+        border-radius: 10px; padding: 16px 12px; color: #fff;
+        display: flex; flex-direction: column; min-height: 560px;
+        box-shadow: 0 4px 14px rgba(101,122,127,.25);
+    }
+    .side-logo { text-align: center; padding: 6px 0 14px; border-bottom: 1px solid rgba(255,255,255,.18); margin-bottom: 12px; }
+    .side-logo img { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; background: rgba(255,255,255,.18); }
+    .side-title { font-size: 14px; font-weight: 600; margin-top: 8px; }
+    .side-sub { font-size: 11px; opacity: .8; margin-top: 2px; }
+    .side-item {
+        display: block; padding: 10px 14px; border-radius: 8px;
+        color: rgba(255,255,255,.92); font-size: 13px; text-decoration: none;
+        margin-bottom: 6px; transition: background .2s;
+    }
+    .side-item:hover { background: rgba(255,255,255,.14); }
+    .side-item.on { background: rgba(255,255,255,.22); font-weight: 600; }
+    .side-foot {
+        margin-top: auto; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.18);
+        display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: rgba(255,255,255,.85);
+    }
+    .side-logout { color: #fff; text-decoration: none; padding: 4px 10px; border-radius: 6px; background: rgba(255,255,255,.15); font-size: 12px; }
+    .side-logout:hover { background: rgba(255,255,255,.28); }
+
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 2px 8px rgba(51,60,63,.05); overflow: hidden; }
+    .card-hd { padding: 14px 20px; border-bottom: 1px solid var(--border); font-size: 15px; font-weight: 600; color: var(--primary-dark); display: flex; align-items: center; }
+    .card-hd::before { content: ""; width: 4px; height: 14px; background: var(--primary); border-radius: 2px; margin-right: 8px; }
+    .card-bd { padding: 20px; }
+
+    .form-item { margin-bottom: 18px; }
+    .form-item .label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .form-item .tip { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.7; }
+    .input, .select, .textarea {
+        width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 6px;
+        font-size: 14px; background: #FBFCFC; color: var(--text); outline: none; transition: all .2s;
+    }
+    .input:focus, .select:focus, .textarea:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(101,122,127,.12); }
+    .textarea { height: 90px; resize: vertical; }
+
+    .btn { display: inline-block; padding: 9px 20px; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; text-decoration: none; color: #fff; background: var(--primary); transition: all .2s; }
+    .btn:hover { background: var(--primary-dark); }
+    .btn-accent { background: var(--accent); }
+    .btn-accent:hover { background: var(--accent-dark); }
+    .btn-back { background: #fff; color: var(--muted); border: 1px solid var(--border); margin-left: 8px; }
+    .btn-back:hover { color: var(--text); background: var(--bg); }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+    .hint { font-size: 12px; color: var(--muted); margin-top: 14px; line-height: 1.8; }
+
+    .json-result { margin-top: 16px; display: none; }
+    .json-result pre {
+        background: #F6F8F8; border: 1px solid var(--border); border-radius: 8px;
+        padding: 14px; font-size: 12px; line-height: 1.7; color: #4A565A;
+        max-height: 320px; overflow: auto; white-space: pre-wrap; word-break: break-all;
+    }
+    .json-result .jr-tip { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    .json-result .jr-err { color: var(--danger); }
+
+    @media (max-width: 900px) {
+        .shell { flex-direction: column; }
+        .side { width: 100%; min-height: 0; flex-direction: row; flex-wrap: wrap; align-items: center; }
+        .side-logo { flex: 1; border-bottom: none; margin-bottom: 0; text-align: left; }
+        .side-nav { display: flex; gap: 6px; flex-wrap: wrap; }
+        .side-item { margin-bottom: 0; }
+        .side-foot { margin-top: 0; border-top: none; padding-top: 0; }
+    }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+    <!-- 左侧栏 -->
+    <aside class="side">
+        <div class="side-logo">
+            <img src="__STATIC__/addons/mxgt/logo.png" alt="logo" onerror="this.style.display='none'">
+            <div class="side-title">沫兮官替官解系统</div>
+            <div class="side-sub">JSON Call</div>
+        </div>
+        <nav class="side-nav">
+            <a class="side-item {if condition="$active eq 'search'"}on{/if}" href="{:addon_url('mxgt/admin/search')}">搜索设置</a>
+            <a class="side-item {if condition="$active eq 'match'"}on{/if}" href="{:addon_url('mxgt/admin/match')}">匹配设置</a>
+            <a class="side-item {if condition="$active eq 'jsoncall'"}on{/if}" href="{:addon_url('mxgt/admin/jsoncall')}">JSON 调用</a>
+            <a class="side-item {if condition="$active eq 'index'"}on{/if}" href="{:addon_url('mxgt/admin/index')}">版本信息</a>
+            <a class="side-item {if condition="$active eq 'config'"}on{/if}" href="{:addon_url('mxgt/admin/config')}">插件配置</a>
+            <a class="side-item {if condition="$active eq 'update'"}on{/if}" href="{:addon_url('mxgt/admin/config')}#online-update">在线更新</a>
+        </nav>
+        <div class="side-foot">
+            <span>v{$version|default='0.0.16'}</span>
+            <a class="side-logout" href="{:addon_url('mxgt/admin/logout')}">退出登录</a>
+        </div>
+    </aside>
+
+    <!-- 右侧内容 -->
+    <main class="main">
+        <div class="page-hd">JSON 调用</div>
+
+        <div class="card">
+            <div class="card-hd">JSON 调用设置</div>
+            <div class="card-bd">
+                <form method="post" action="{:addon_url('mxgt/admin/jsoncall')}">
+                    {foreach name="config" item="item"}
+                    <div class="form-item">
+                        <label class="label">{$item.title}</label>
+                        {switch name="item.type"}
+                        {case value="select"}
+                        <select name="row[{$item.name}]" class="select">
+                            {foreach name="item.content" item="opt" key="optKey"}
+                            <option value="{$optKey}" {if condition="$item['value'] eq $optKey"}selected{/if}>{$opt}</option>
+                            {/foreach}
+                        </select>
+                        {/case}
+                        {case value="textarea"}
+                        <textarea name="row[{$item.name}]" class="textarea">{$item.value}</textarea>
+                        {/case}
+                        {case value="number"}
+                        <input type="number" name="row[{$item.name}]" class="input" value="{$item.value}">
+                        {/case}
+                        {default /}
+                        <input type="text" name="row[{$item.name}]" class="input" value="{$item.value}">
+                        {/switch}
+                        {if condition="!empty($item['tip'])"}<div class="tip">{$item.tip}</div>{/if}
+                    </div>
+                    {/foreach}
+                    <div class="actions">
+                        <button type="submit" class="btn">保存配置</button>
+                        <button type="button" class="btn btn-accent" id="btn-json-test" onclick="testJson()">测试调用</button>
+                        <a class="btn btn-back" href="{:addon_url('mxgt/admin/index')}">返回首页</a>
+                    </div>
+                </form>
+                <div class="hint">JSON 调用为官替/官解核心能力预留的接口与密钥配置；「测试调用」使用已保存的配置发起一次 GET 请求并展示返回内容。</div>
+                <div class="json-result" id="json-result">
+                    <div class="jr-tip" id="jr-tip"></div>
+                    <pre id="jr-body"></pre>
+                </div>
+            </div>
+        </div>
+    </main>
+
+</div>
+
+<script>
+    var JSON_TEST_URL = "{:addon_url('mxgt/admin/jsonTest')}";
+
+    function testJson() {
+        var btn = document.getElementById('btn-json-test');
+        var box = document.getElementById('json-result');
+        var tip = document.getElementById('jr-tip');
+        var body = document.getElementById('jr-body');
+        btn.disabled = true; btn.textContent = '测试中...';
+        box.style.display = 'none';
+
+        fetch(JSON_TEST_URL, { method: 'POST' }).then(function (r) { return r.json(); }).then(function (d) {
+            box.style.display = 'block';
+            if (d && d.code === 1) {
+                tip.textContent = d.msg || '调用成功：';
+                tip.className = 'jr-tip';
+                body.textContent = d.data || '';
+            } else {
+                tip.textContent = (d && d.msg) ? d.msg : '测试调用失败';
+                tip.className = 'jr-tip jr-err';
+                body.textContent = '';
+            }
+        }).catch(function () {
+            box.style.display = 'block';
+            tip.textContent = '测试调用请求异常，请重试';
+            tip.className = 'jr-tip jr-err';
+            body.textContent = '';
+        }).then(function () {
+            btn.disabled = false; btn.textContent = '测试调用';
+        });
+    }
+</script>
+
+</body>
+</html>

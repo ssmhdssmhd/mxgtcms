@@ -180,6 +180,175 @@ class Admin extends Controller
     }
 
     /**
+     * 搜索设置页（独立配置页，仅展示 search_* 配置项）
+     */
+    public function search()
+    {
+        return $this->settingsPage('search', '搜索设置');
+    }
+
+    /**
+     * 匹配设置页（独立配置页，仅展示 match_* 配置项）
+     */
+    public function match()
+    {
+        return $this->settingsPage('match', '匹配设置');
+    }
+
+    /**
+     * JSON 调用设置页（独立配置页，仅展示 json_* 配置项）
+     */
+    public function jsoncall()
+    {
+        return $this->settingsPage('jsoncall', 'JSON 调用');
+    }
+
+    /**
+     * JSON 调用测试：使用已保存配置发起 GET 请求，返回响应内容片段
+     * 仅供 JSON 调用设置页「测试调用」按钮使用。
+     */
+    public function jsonTest()
+    {
+        if (!$this->request->isPost()) {
+            $this->jsonOut(['code' => 0, 'msg' => '非法请求']);
+        }
+        $cfg = get_addon_config('mxgt');
+        $url = isset($cfg['json_url']) ? trim((string) $cfg['json_url']) : '';
+        if ($url === '') {
+            $this->jsonOut(['code' => 0, 'msg' => '请先配置并保存 JSON 接口地址']);
+        }
+        $key = isset($cfg['json_key']) ? trim((string) $cfg['json_key']) : '';
+        $timeout = isset($cfg['json_timeout']) ? max(1, intval($cfg['json_timeout'])) : 10;
+
+        // 拼接调用密钥参数
+        if ($key !== '') {
+            $sep = strpos($url, '?') === false ? '?' : '&';
+            $url .= $sep . 'key=' . rawurlencode($key);
+        }
+
+        $body = $this->httpGetBody($url, $timeout, 'MxgtJsonTest');
+        if ($body === false) {
+            $this->jsonOut(['code' => 0, 'msg' => '请求失败，请检查接口地址与服务器外网']);
+        }
+        if ($body === '') {
+            $this->jsonOut(['code' => 0, 'msg' => '接口返回内容为空']);
+        }
+        $this->jsonOut(['code' => 1, 'msg' => '调用成功，返回内容片段：', 'data' => mb_substr((string) $body, 0, 2000, 'UTF-8')]);
+    }
+
+    /**
+     * HTTP GET 请求（优先 cURL，其次 file_get_contents），用于 jsonTest 测试调用
+     * @param string $url     请求地址
+     * @param int    $timeout 超时秒数
+     * @param string $ua      User-Agent
+     * @return string|false 成功返回响应体，失败返回 false
+     */
+    protected function httpGetBody($url, $timeout = 10, $ua = 'Mxgt')
+    {
+        $timeout = max(1, intval($timeout));
+        if (function_exists('curl_init')) {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+            curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_MAXREDIRS, 3);
+            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (' . $ua . ')');
+            $body = curl_exec($ch);
+            $errno = curl_errno($ch);
+            curl_close($ch);
+            return $errno === 0 ? $body : false;
+        }
+        $opts = [
+            'http' => [
+                'method' => 'GET',
+                'timeout' => $timeout,
+                'header' => "User-Agent: Mozilla/5.0 ({$ua})\r\n",
+                'ignore_errors' => true,
+            ],
+        ];
+        return @file_get_contents($url, false, stream_context_create($opts));
+    }
+
+    /**
+     * 分组设置页通用处理：按前缀过滤配置项，保存走框架 set_addon_fullconfig（与「插件配置」同源）
+     * @param string $group     分组标识：search / match / jsoncall
+     * @param string $pageTitle 页面标题
+     */
+    protected function settingsPage($group, $pageTitle)
+    {
+        if ($this->request->isPost()) {
+            $params = $this->request->post('row/a');
+            if (!is_array($params)) {
+                $params = [];
+            }
+            $full = get_addon_fullconfig('mxgt');
+            if (!is_array($full)) {
+                $full = [];
+            }
+            $prefix = $this->groupPrefix($group);
+            foreach ($full as &$item) {
+                if (!isset($item['name']) || strpos($item['name'], $prefix) !== 0) {
+                    continue;
+                }
+                if (isset($params[$item['name']])) {
+                    $item['value'] = is_array($params[$item['name']])
+                        ? implode(',', $params[$item['name']])
+                        : (string) $params[$item['name']];
+                }
+            }
+            unset($item);
+            set_addon_fullconfig('mxgt', $full);
+            Service::refresh();
+            Cache('addons', null);
+            Cache('hooks', null);
+            $this->success('保存成功', addon_url('mxgt/admin/' . $group));
+        }
+
+        $info = get_addon_info('mxgt');
+        $this->assign('version', isset($info['version']) ? $info['version'] : '');
+        $this->assign('config', $this->groupConfigItems($group));
+        $this->assign('page_title', $pageTitle);
+        $this->assign('active', $group);
+        return $this->fetch('admin/' . $group);
+    }
+
+    /**
+     * 分组配置项前缀（search_ / match_ / json_）
+     * @param string $group
+     * @return string
+     */
+    protected function groupPrefix($group)
+    {
+        $map = array('search' => 'search_', 'match' => 'match_', 'jsoncall' => 'json_');
+        return isset($map[$group]) ? $map[$group] : $group . '_';
+    }
+
+    /**
+     * 按分组前缀过滤配置项，供分组设置页表单渲染
+     * @param string $group
+     * @return array
+     */
+    protected function groupConfigItems($group)
+    {
+        $full = get_addon_fullconfig('mxgt');
+        if (!is_array($full)) {
+            return array();
+        }
+        $prefix = $this->groupPrefix($group);
+        $items = array();
+        foreach ($full as $item) {
+            if (is_array($item) && isset($item['name']) && strpos($item['name'], $prefix) === 0) {
+                $items[] = $item;
+            }
+        }
+        return $items;
+    }
+
+    /**
      * 在线更新：检查 → 下载 → 备份 → 覆盖（依赖根目录 mxthxt 云端更新核心）
      * 全程向 runtime/mxthxt/update_progress.json 写入进度，前端轮询 updateProgress 显示进度条。
      * 支持 force=1 强制更新：即使远端判定“已是最新”（如镜像缓存滞后），
