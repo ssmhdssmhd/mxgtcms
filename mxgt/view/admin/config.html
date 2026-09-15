@@ -196,7 +196,7 @@
                 <a class="btn btn-ghost" href="{:addon_url('mxgt/admin/config', ['check' => 1])}">检查更新</a>
                 <a class="btn btn-accent" href="javascript:void(0)" id="btn-update" onclick="startUpdate()">更新</a>
             </div>
-            <div class="hint">点击「更新」将从当前 GitHub 仓库拉取最新发行版并覆盖 addons/mxgt 与 mxthxt，自动保留配置与启用状态；下载前自动对多镜像测速选优（圆形进度环实时显示）；已是最新版本时直接提示无需更新。</div>
+            <div class="hint">点击「更新」将从当前 GitHub 仓库拉取最新发行版并覆盖 addons/mxgt 与 mxthxt，自动保留配置与启用状态；下载前自动对多镜像测速选优（圆形进度环实时显示）。即使提示“已是最新”（如镜像缓存滞后），点击「更新」也会强制重新拉取最新发行版覆盖。</div>
         </div>
     </div>
 
@@ -238,7 +238,7 @@
 </style>
 
 <script>
-    var UPDATE_URL = "{:addon_url('mxgt/admin/doUpdate')}";
+    var UPDATE_URL = "{:addon_url('mxgt/admin/doUpdate', ['force' => 1])}";
     var PROGRESS_URL = "{:addon_url('mxgt/admin/updateProgress')}";
     var RELOAD_URL = "{:addon_url('mxgt/admin/config', ['check' => 1])}";
 

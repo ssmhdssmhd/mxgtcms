@@ -72,6 +72,7 @@ foreach ($argv as $a) {
     }
 }
 if (!$isCli && !$yes) { $yes = true; } // 浏览器访问视为已授权直接执行
+if (!$isCli) { $force = true; } // 浏览器访问默认强制重新拉取最新发行版覆盖（用户主动访问脚本即明确意图，可规避镜像缓存滞后）
 
 // ---------- 载入云端更新核心 ----------
 $updateCore = ROOT_PATH . 'mxthxt' . DS . 'core' . DS . 'Update.php';

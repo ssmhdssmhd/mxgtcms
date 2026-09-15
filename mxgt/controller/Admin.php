@@ -182,9 +182,12 @@ class Admin extends Controller
     /**
      * 在线更新：检查 → 下载 → 备份 → 覆盖（依赖根目录 mxthxt 云端更新核心）
      * 全程向 runtime/mxthxt/update_progress.json 写入进度，前端轮询 updateProgress 显示进度条。
+     * 支持 force=1 强制更新：即使远端判定“已是最新”（如镜像缓存滞后），
+     * 也重新拉取当前 GitHub 仓库最新发行版覆盖。
      */
     public function doUpdate()
     {
+        $force = intval($this->request->param('force', 0));
         $progressFile = ROOT_PATH . 'runtime/mxthxt' . DS . 'update_progress.json';
         $updateCoreFile = $this->updateCoreFile();
         if (!is_file($updateCoreFile)) {
@@ -210,10 +213,13 @@ class Admin extends Controller
             $this->writeProgress($progressFile, 'error', 0, $msg);
             $this->jsonOut(['code' => 0, 'msg' => $msg]);
         }
-        if (empty($result['has_update'])) {
-            $msg = '当前已是最新版本：' . $localVersion;
+        if (empty($result['has_update']) && !$force) {
+            $msg = '当前已是最新版本：v' . ltrim((string) $localVersion, 'vV');
             $this->writeProgress($progressFile, 'done', 100, $msg);
             $this->jsonOut(['code' => 0, 'msg' => $msg]);
+        }
+        if (empty($result['has_update']) && $force) {
+            $this->writeProgress($progressFile, 'check', 20, '远端判定已是最新，强制重新拉取最新发行版覆盖...');
         }
 
         // 2. 下载更新包（优先发行版资产，未配置时回退源码 zip），带进度
