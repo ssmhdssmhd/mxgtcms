@@ -124,8 +124,8 @@ class MxthxtUpdate
     /**
      * 下载更新包到 runtime/mxthxt/，返回本地文件路径
      * 传入 $progressFile 时（如 runtime/mxthxt/update_progress.json），下载期间
-     * 持续向该文件写入进度（step=download, percent 0-85），供前端轮询显示进度条。
-     * 国内镜像源下按候选镜像前缀依次尝试，全部失败后回退 GitHub 官方直连。
+     * 持续向该文件写入进度（step=check/speed/download/apply/done），供前端轮询显示。
+     * 国内镜像源下：先对候选镜像逐一测速，优先使用最快镜像下载，失败自动切换下一个，最后回退官方直连。
      * @param string $zipballUrl   更新包下载地址（GitHub 发行版资产或 zipball）
      * @param string $source       更新源：github / mirror / custom
      * @param string $progressFile 进度文件绝对路径（可选）
@@ -138,21 +138,20 @@ class MxthxtUpdate
             return $this->fail('更新包下载地址为空');
         }
 
-        // 构造候选下载地址：镜像源时依次尝试多个镜像前缀，最后回退官方直连
-        $urls = array($url);
-        if ($source === 'mirror' && strpos($url, 'https://github.com') === 0) {
-            $prefixes = (isset($this->config['mirror_download_prefixes']) && is_array($this->config['mirror_download_prefixes']))
-                ? $this->config['mirror_download_prefixes']
-                : array(isset($this->config['mirror_download_prefix']) ? $this->config['mirror_download_prefix'] : '');
-            $prefixes = array_values(array_filter(array_map('trim', $prefixes), 'strlen'));
-            if (empty($prefixes) && isset($this->config['mirror_download_prefix'])) {
-                $prefixes = array(trim((string) $this->config['mirror_download_prefix']));
+        // 构造候选下载地址：镜像源时生成各镜像前缀地址 + 官方直连兜底
+        $urls = $this->buildCandidateUrls($url, $source);
+
+        // 多镜像：先测速选优（写入 step=speed 进度），按速度从高到低下载
+        $speedTested = false;
+        if (count($urls) > 1) {
+            if ($progressFile !== '') {
+                $this->writeProgressFile($progressFile, 'speed', 30, '正在对 ' . count($urls) . ' 个镜像测速选优...');
             }
-            $urls = array();
-            foreach ($prefixes as $p) {
-                $urls[] = $p . $url;
+            $urls = $this->speedTest($urls, $progressFile);
+            $speedTested = true;
+            if ($progressFile !== '') {
+                $this->writeProgressFile($progressFile, 'speed', 60, '测速完成，使用最快镜像：' . $this->shortHost($urls[0]) . ' 下载');
             }
-            $urls[] = $url; // 最后直连 GitHub 官方
         }
 
         $dir = $this->runtimeDir();
@@ -162,10 +161,11 @@ class MxthxtUpdate
         foreach ($urls as $u) {
             if ($progressFile !== '') {
                 // 带进度：curl 下载到文件并实时写进度
-                $this->writeProgressFile($progressFile, 'download', 8, '正在下载更新包（' . $this->shortHost($u) . '）...');
-                $ok = $this->httpDownloadToFile($u, $save, $progressFile);
+                $startPct = $speedTested ? 62 : 8;
+                $this->writeProgressFile($progressFile, 'download', $startPct, '正在下载更新包（' . $this->shortHost($u) . '）...');
+                $ok = $this->httpDownloadToFile($u, $save, $progressFile, $startPct, 88);
                 if ($ok) {
-                    $this->writeProgressFile($progressFile, 'download', 85, '下载完成，准备应用更新...');
+                    $this->writeProgressFile($progressFile, 'download', 88, '下载完成，准备应用更新...');
                 }
             } else {
                 // 无进度：沿用原逻辑（整包读入内存后落盘）
@@ -181,6 +181,93 @@ class MxthxtUpdate
             @unlink($save); // 清理本次失败残留，尝试下一个地址
         }
         return $this->fail('更新包下载失败，请检查服务器外网与更新源地址');
+    }
+
+    /**
+     * 构造候选下载地址列表（镜像源：各镜像前缀 + 官方直连兜底；非镜像：仅原地址）
+     * @param string $url    原始下载地址
+     * @param string $source 更新源：github / mirror / custom
+     * @return array
+     */
+    protected function buildCandidateUrls($url, $source)
+    {
+        $urls = array($url);
+        if ($source === 'mirror' && strpos($url, 'https://github.com') === 0) {
+            $prefixes = (isset($this->config['mirror_download_prefixes']) && is_array($this->config['mirror_download_prefixes']))
+                ? $this->config['mirror_download_prefixes']
+                : array(isset($this->config['mirror_download_prefix']) ? $this->config['mirror_download_prefix'] : '');
+            $prefixes = array_values(array_filter(array_map('trim', $prefixes), 'strlen'));
+            if (empty($prefixes) && isset($this->config['mirror_download_prefix'])) {
+                $prefixes = array(trim((string) $this->config['mirror_download_prefix']));
+            }
+            $urls = array();
+            foreach ($prefixes as $p) {
+                $urls[] = $p . $url;
+            }
+            $urls[] = $url; // 最后直连 GitHub 官方
+        }
+        return $urls;
+    }
+
+    /**
+     * 镜像测速选优：对候选地址逐一测速（下载前 512KB），按速度从高到低排序返回地址列表
+     * @param array  $urls         候选下载地址列表
+     * @param string $progressFile 进度文件绝对路径（可选）
+     * @return array 按速度降序排列的地址列表
+     */
+    protected function speedTest($urls, $progressFile = '')
+    {
+        $results = array();
+        $total = max(1, count($urls));
+        foreach ($urls as $i => $u) {
+            if ($progressFile !== '') {
+                $this->writeProgressFile($progressFile, 'speed', 30 + intval(($i + 1) / $total * 20), '测速中（' . ($i + 1) . '/' . $total . '）：' . $this->shortHost($u));
+            }
+            $results[] = array('url' => $u, 'speed' => $this->measureSpeed($u));
+        }
+        usort($results, function ($a, $b) {
+            return $b['speed'] - $a['speed'];
+        });
+        $sorted = array();
+        foreach ($results as $r) {
+            $sorted[] = $r['url'];
+        }
+        return $sorted;
+    }
+
+    /**
+     * 单地址测速：curl 下载前 512KB，测量每秒字节数；失败返回 0（排序时自动靠后）
+     * @param string $url
+     * @return int 字节/秒
+     */
+    protected function measureSpeed($url)
+    {
+        if (!function_exists('curl_init')) {
+            return 0;
+        }
+        $bytes = 0;
+        $start = microtime(true);
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, false);
+        curl_setopt($ch, CURLOPT_RANGE, '0-524287'); // 仅测速前 512KB
+        curl_setopt($ch, CURLOPT_TIMEOUT, 6);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 4);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (MxgtUpdate)');
+        curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use (&$bytes) {
+            $bytes += strlen($data);
+            return strlen($data);
+        });
+        $ok = curl_exec($ch);
+        curl_close($ch);
+        $elapsed = microtime(true) - $start;
+        if (!$ok || $bytes <= 0 || $elapsed <= 0) {
+            return 0;
+        }
+        return intval($bytes / $elapsed);
     }
 
     /**
@@ -363,14 +450,16 @@ class MxthxtUpdate
 
     /**
      * 带进度下载：curl 边下载边写入本地文件，并通过 CURLOPT_PROGRESSFUNCTION
-     * 持续更新进度文件（percent 映射到 8-85 区间，前端轮询显示进度条）。
+     * 持续更新进度文件（percent 映射到 $startPercent-$endPercent 区间，前端轮询显示）。
      * 无 curl 扩展时回退为整包下载（不产生中间进度）。
-     * @param string $url          下载地址
-     * @param string $saveFile     保存的本地文件
-     * @param string $progressFile 进度文件
+     * @param string $url           下载地址
+     * @param string $saveFile      保存的本地文件
+     * @param string $progressFile  进度文件
+     * @param int    $startPercent  起始百分比（默认 8，测速场景从 62 起）
+     * @param int    $endPercent    结束百分比（默认 88）
      * @return bool
      */
-    protected function httpDownloadToFile($url, $saveFile, $progressFile)
+    protected function httpDownloadToFile($url, $saveFile, $progressFile, $startPercent = 8, $endPercent = 88)
     {
         if (!function_exists('curl_init')) {
             $body = $this->httpGet($url);
@@ -379,6 +468,10 @@ class MxthxtUpdate
             }
             return @file_put_contents($saveFile, $body) !== false;
         }
+
+        $startPercent = max(0, min(100, intval($startPercent)));
+        $endPercent = max($startPercent, min(100, intval($endPercent)));
+        $range = max(1, $endPercent - $startPercent);
 
         $fp = @fopen($saveFile, 'wb');
         if ($fp === false) {
@@ -394,9 +487,9 @@ class MxthxtUpdate
         curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (MxgtUpdate)');
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_NOPROGRESS, false);
-        curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, function ($ch, $dlTotal, $dlNow, $ulTotal, $ulNow) use ($progressFile) {
+        curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, function ($ch, $dlTotal, $dlNow, $ulTotal, $ulNow) use ($progressFile, $startPercent, $range) {
             if ($dlTotal > 0) {
-                $percent = 8 + intval($dlNow / $dlTotal * 77);
+                $percent = $startPercent + intval($dlNow / $dlTotal * $range);
                 $pct = intval($dlNow / $dlTotal * 100);
                 $this->writeProgressFile($progressFile, 'download', $percent, '正在下载更新包 ' . $pct . '%...');
             }
