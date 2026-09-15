@@ -25,7 +25,7 @@ return [
         'title' => 'GitHub 仓库',
         'name' => 'github_repo',
         'type' => 'string',
-        'value' => 'moxi/mxgtcms',
+        'value' => 'ssmhdssmhd/mxgtcms',
         'tip' => '托管更新包的 GitHub 仓库，格式：用户名/仓库名。',
     ],
     [

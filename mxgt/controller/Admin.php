@@ -129,12 +129,15 @@ class Admin extends Controller
 
     /**
      * 在线更新：检查 → 下载 → 备份 → 覆盖（依赖根目录 mxthxt 云端更新核心）
+     * 全程向 runtime/mxthxt/update_progress.json 写入进度，前端轮询 updateProgress 显示进度条。
      */
     public function doUpdate()
     {
+        $progressFile = ROOT_PATH . 'runtime/mxthxt' . DS . 'update_progress.json';
         $updateCoreFile = ROOT_PATH . 'mxthxt' . DS . 'Update.php';
         if (!is_file($updateCoreFile)) {
-            $this->error('未检测到云端更新组件，请将 mxthxt 文件夹上传至苹果CMS根目录（与 addons 同级）');
+            $this->writeProgress($progressFile, 'error', 0, '未检测到云端更新组件，请将 mxthxt 文件夹上传至苹果CMS根目录（与 addons 同级）');
+            $this->jsonOut(['code' => 0, 'msg' => '未检测到云端更新组件，请将 mxthxt 文件夹上传至苹果CMS根目录（与 addons 同级）']);
         }
         require_once $updateCoreFile;
         $update = new \MxthxtUpdate();
@@ -148,28 +151,38 @@ class Admin extends Controller
         $customUrl = isset($cfg['update_custom_url']) ? $cfg['update_custom_url'] : '';
 
         // 1. 检查更新
+        $this->writeProgress($progressFile, 'check', 5, '正在检查远程更新源...');
         $result = $update->check($localVersion, $source, $repo, $customUrl);
         if (empty($result['code'])) {
-            $this->error(isset($result['msg']) ? $result['msg'] : '检查更新失败，请稍后重试');
+            $msg = isset($result['msg']) ? $result['msg'] : '检查更新失败，请稍后重试';
+            $this->writeProgress($progressFile, 'error', 0, $msg);
+            $this->jsonOut(['code' => 0, 'msg' => $msg]);
         }
         if (empty($result['has_update'])) {
-            $this->error('当前已是最新版本：' . $localVersion);
+            $msg = '当前已是最新版本：' . $localVersion;
+            $this->writeProgress($progressFile, 'done', 100, $msg);
+            $this->jsonOut(['code' => 0, 'msg' => $msg]);
         }
 
-        // 2. 下载更新包（优先发行版资产，未配置时回退源码 zip）
+        // 2. 下载更新包（优先发行版资产，未配置时回退源码 zip），带进度
         $zipballUrl = isset($result['download_url']) ? $result['download_url'] : '';
         if ($zipballUrl === '') {
             $zipballUrl = isset($result['zipball_url']) ? $result['zipball_url'] : '';
         }
-        $dl = $update->download($zipballUrl, $source);
+        $dl = $update->download($zipballUrl, $source, $progressFile);
         if (empty($dl['code'])) {
-            $this->error(isset($dl['msg']) ? $dl['msg'] : '更新包下载失败');
+            $msg = isset($dl['msg']) ? $dl['msg'] : '更新包下载失败';
+            $this->writeProgress($progressFile, 'error', 0, $msg);
+            $this->jsonOut(['code' => 0, 'msg' => $msg]);
         }
 
         // 3. 应用更新（备份 → 覆盖 → 保留配置与启用状态）
+        $this->writeProgress($progressFile, 'apply', 88, '正在应用更新（备份/覆盖/保留配置）...');
         $ap = $update->apply(isset($dl['path']) ? $dl['path'] : '');
         if (empty($ap['code'])) {
-            $this->error(isset($ap['msg']) ? $ap['msg'] : '更新应用失败');
+            $msg = isset($ap['msg']) ? $ap['msg'] : '更新应用失败';
+            $this->writeProgress($progressFile, 'error', 0, $msg);
+            $this->jsonOut(['code' => 0, 'msg' => $msg]);
         }
 
         // 4. 刷新插件缓存
@@ -182,7 +195,60 @@ class Admin extends Controller
             @unlink($checkCache);
         }
 
-        $this->success('在线更新完成（' . $result['latest_version'] . '）：' . $ap['msg']);
+        $msg = '在线更新完成（' . $result['latest_version'] . '）：' . $ap['msg'];
+        $this->writeProgress($progressFile, 'done', 100, $msg);
+        $this->jsonOut(['code' => 1, 'msg' => $msg]);
+    }
+
+    /**
+     * 在线更新进度（前端轮询）
+     * 返回 runtime/mxthxt/update_progress.json 当前进度：step/percent/msg/time
+     */
+    public function updateProgress()
+    {
+        $file = ROOT_PATH . 'runtime/mxthxt' . DS . 'update_progress.json';
+        $data = array('step' => 'idle', 'percent' => 0, 'msg' => '暂无进行中的更新', 'time' => time());
+        if (is_file($file)) {
+            $d = json_decode(@file_get_contents($file), true);
+            if (is_array($d)) {
+                $data = $d;
+            }
+        }
+        $this->jsonOut($data);
+    }
+
+    /**
+     * 输出 JSON 并终止（兼容 AJAX 与直接访问）
+     * @param array $data
+     */
+    protected function jsonOut($data)
+    {
+        if (!headers_sent()) {
+            header('Content-Type: application/json; charset=utf-8');
+        }
+        echo json_encode($data, JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    /**
+     * 写入更新进度文件
+     * @param string $file
+     * @param string $step
+     * @param int    $percent
+     * @param string $msg
+     */
+    protected function writeProgress($file, $step, $percent, $msg = '')
+    {
+        $dir = dirname($file);
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+        @file_put_contents($file, json_encode(array(
+            'step' => (string) $step,
+            'percent' => intval($percent),
+            'msg' => (string) $msg,
+            'time' => time(),
+        ), JSON_UNESCAPED_UNICODE));
     }
 
     /**

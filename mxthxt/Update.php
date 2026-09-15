@@ -106,11 +106,14 @@ class MxthxtUpdate
 
     /**
      * 下载更新包到 runtime/mxthxt/，返回本地文件路径
-     * @param string $zipballUrl 更新包下载地址（GitHub zipball_url 或自定义地址）
-     * @param string $source     更新源：github / mirror / custom
+     * 传入 $progressFile 时（如 runtime/mxthxt/update_progress.json），下载期间
+     * 持续向该文件写入进度（step=download, percent 0-85），供前端轮询显示进度条。
+     * @param string $zipballUrl   更新包下载地址（GitHub 发行版资产或 zipball）
+     * @param string $source       更新源：github / mirror / custom
+     * @param string $progressFile 进度文件绝对路径（可选）
      * @return array code:1成功 0失败; path:本地文件路径; msg
      */
-    public function download($zipballUrl = '', $source = 'mirror')
+    public function download($zipballUrl = '', $source = 'mirror', $progressFile = '')
     {
         $url = trim((string) $zipballUrl);
         if ($url === '') {
@@ -123,15 +126,26 @@ class MxthxtUpdate
             $url = $prefix . $url;
         }
 
-        $body = $this->httpGet($url);
-        if ($body === false || $body === '') {
-            return $this->fail('更新包下载失败，请检查服务器外网与更新源地址');
-        }
-
         $dir = $this->runtimeDir();
         $save = $dir . 'update_' . date('YmdHis') . '.zip';
-        if (@file_put_contents($save, $body) === false) {
-            return $this->fail('更新包保存失败，请检查 runtime 目录写入权限');
+
+        if ($progressFile !== '') {
+            // 带进度：curl 下载到文件并实时写进度
+            $this->writeProgressFile($progressFile, 'download', 8, '开始下载更新包...');
+            $ok = $this->httpDownloadToFile($url, $save, $progressFile);
+            if ($ok) {
+                $this->writeProgressFile($progressFile, 'download', 85, '下载完成，准备应用更新...');
+            }
+        } else {
+            // 无进度：沿用原逻辑（整包读入内存后落盘）
+            $body = $this->httpGet($url);
+            $ok = ($body !== false && $body !== '');
+            if ($ok) {
+                $ok = @file_put_contents($save, $body) !== false;
+            }
+        }
+        if (!$ok) {
+            return $this->fail('更新包下载失败，请检查服务器外网与更新源地址');
         }
         return ['code' => 1, 'path' => $save, 'msg' => '更新包下载完成'];
     }
@@ -277,6 +291,79 @@ class MxthxtUpdate
             ],
         ];
         return @file_get_contents($url, false, stream_context_create($opts));
+    }
+
+    /**
+     * 带进度下载：curl 边下载边写入本地文件，并通过 CURLOPT_PROGRESSFUNCTION
+     * 持续更新进度文件（percent 映射到 8-85 区间，前端轮询显示进度条）。
+     * 无 curl 扩展时回退为整包下载（不产生中间进度）。
+     * @param string $url          下载地址
+     * @param string $saveFile     保存的本地文件
+     * @param string $progressFile 进度文件
+     * @return bool
+     */
+    protected function httpDownloadToFile($url, $saveFile, $progressFile)
+    {
+        if (!function_exists('curl_init')) {
+            $body = $this->httpGet($url);
+            if ($body === false || $body === '') {
+                return false;
+            }
+            return @file_put_contents($saveFile, $body) !== false;
+        }
+
+        $fp = @fopen($saveFile, 'wb');
+        if ($fp === false) {
+            return false;
+        }
+        $timeout = isset($this->config['timeout']) ? intval($this->config['timeout']) : 15;
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_FILE, $fp);
+        curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (MxgtUpdate)');
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_NOPROGRESS, false);
+        curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, function ($ch, $dlTotal, $dlNow, $ulTotal, $ulNow) use ($progressFile) {
+            if ($dlTotal > 0) {
+                $percent = 8 + intval($dlNow / $dlTotal * 77);
+                $pct = intval($dlNow / $dlTotal * 100);
+                $this->writeProgressFile($progressFile, 'download', $percent, '正在下载更新包 ' . $pct . '%...');
+            }
+            return 0;
+        });
+        $ok = curl_exec($ch);
+        $errno = curl_errno($ch);
+        curl_close($ch);
+        fclose($fp);
+        return $ok !== false && $errno === 0;
+    }
+
+    /**
+     * 写入更新进度文件（JSON），供前端轮询 /addons/mxgt/admin/updateProgress 读取
+     * 约定 step：check / download / apply / done / error
+     * @param string $file    进度文件绝对路径
+     * @param string $step    步骤
+     * @param int    $percent 百分比 0-100
+     * @param string $msg     提示文字
+     */
+    public function writeProgressFile($file, $step, $percent, $msg = '')
+    {
+        if ($file === '') {
+            return;
+        }
+        $dir = dirname($file);
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+        @file_put_contents($file, json_encode(array(
+            'step' => (string) $step,
+            'percent' => intval($percent),
+            'msg' => (string) $msg,
+            'time' => time(),
+        ), JSON_UNESCAPED_UNICODE));
     }
 
     /**
@@ -452,9 +539,14 @@ class MxthxtUpdate
                 $oldValues[$item['name']] = isset($item['value']) ? $item['value'] : '';
             }
         }
+        // 已知错误的旧默认值不合并（使用新配置的默认值），例如早期版本误填的仓库地址
+        $badOldValues = array('moxi/mxgtcms');
         $changed = false;
         foreach ($new as $k => $item) {
             if (is_array($item) && isset($item['name']) && array_key_exists($item['name'], $oldValues)) {
+                if (in_array($oldValues[$item['name']], $badOldValues, true)) {
+                    continue;
+                }
                 $new[$k]['value'] = $oldValues[$item['name']];
                 $changed = true;
             }
