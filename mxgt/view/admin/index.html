@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>沫兮官替官解系统 - 首页</title>
+<title>沫兮官替官解系统 - 版本信息</title>
 <style>
     :root {
         --primary: #657A7F;      /* 主色 */
@@ -21,7 +21,6 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: var(--bg); font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif; color: var(--text); padding: 20px; }
 
-    /* 整体框架：左侧栏 + 右侧内容 */
     .shell { display: flex; gap: 18px; align-items: flex-start; min-height: calc(100vh - 40px); }
     .main { flex: 1; min-width: 0; }
     .page-hd { font-size: 18px; font-weight: 600; color: var(--primary-dark); margin-bottom: 14px; display: flex; align-items: center; }
@@ -58,19 +57,17 @@
     .card-hd::before { content: ""; width: 4px; height: 14px; background: var(--primary); border-radius: 2px; margin-right: 8px; }
     .card-bd { padding: 20px; }
 
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
-    .stat { background: #FBFCFC; border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
-    .stat .k { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-    .stat .v { font-size: 15px; font-weight: 600; color: var(--text); word-break: break-all; }
-    .stat .v small { font-weight: 400; font-size: 12px; color: var(--muted); }
+    .ver-row { display: flex; justify-content: space-between; align-items: center; padding: 13px 0; border-bottom: 1px dashed var(--border); font-size: 14px; }
+    .ver-row:last-of-type { border-bottom: none; }
+    .ver-row .k { color: var(--muted); font-size: 13px; }
+    .ver-row .v { font-weight: 600; color: var(--text); font-size: 15px; }
 
     .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; color: #fff; font-weight: 500; }
     .badge-ok { background: var(--ok); }
     .badge-update { background: var(--accent); }
     .badge-err { background: var(--danger); }
-    .badge-muted { background: var(--muted); }
 
-    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 4px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
     .btn { display: inline-block; padding: 10px 22px; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; text-decoration: none; color: #fff; background: var(--primary); transition: all .2s; }
     .btn:hover { background: var(--primary-dark); }
     .btn-accent { background: var(--accent); }
@@ -78,9 +75,14 @@
     .btn-ghost { background: transparent; color: var(--primary); border: 1px solid var(--primary); }
     .btn-ghost:hover { background: rgba(101,122,127,.08); }
 
-    .desc { font-size: 13px; color: #5B666A; line-height: 2; }
-    .desc b { color: var(--primary-dark); }
-    .tip { font-size: 12px; color: var(--muted); margin-top: 10px; line-height: 1.8; }
+    .log-item { padding: 12px 0; border-bottom: 1px dashed var(--border); }
+    .log-item:last-of-type { border-bottom: none; }
+    .log-item .lv { font-size: 14px; font-weight: 600; color: var(--primary-dark); }
+    .log-item .lt { font-size: 12px; color: var(--muted); margin-left: 8px; font-weight: 400; }
+    .log-item ul { margin: 6px 0 0 18px; }
+    .log-item li { font-size: 13px; color: #5B666A; line-height: 1.9; }
+
+    .tip { font-size: 12px; color: var(--muted); margin-top: 12px; line-height: 1.8; }
 
     @media (max-width: 900px) {
         .shell { flex-direction: column; }
@@ -104,63 +106,38 @@
             <div class="side-sub">MacCMS Addon</div>
         </div>
         <nav class="side-nav">
-            <a class="side-item {if condition="$active eq 'index'"}on{/if}" href="{:addon_url('mxgt/admin/index')}">首页看板</a>
+            <a class="side-item {if condition="$active eq 'index'"}on{/if}" href="{:addon_url('mxgt/admin/index')}">版本信息</a>
             <a class="side-item {if condition="$active eq 'config'"}on{/if}" href="{:addon_url('mxgt/admin/config')}">插件配置</a>
             <a class="side-item {if condition="$active eq 'update'"}on{/if}" href="{:addon_url('mxgt/admin/config')}#online-update">在线更新</a>
         </nav>
         <div class="side-foot">
-            <span>v{$version|default='0.0.15'}</span>
+            <span>v{$version|default='0.0.16'}</span>
             <a class="side-logout" href="{:addon_url('mxgt/admin/logout')}">退出登录</a>
         </div>
     </aside>
 
     <!-- 右侧内容 -->
     <main class="main">
-        <div class="page-hd">首页看板</div>
+        <div class="page-hd">版本信息</div>
 
         <div class="card">
-            <div class="card-hd">运行状态</div>
+            <div class="card-hd">当前版本与最新版本</div>
             <div class="card-bd">
-                <div class="grid">
-                    <div class="stat">
-                        <div class="k">本地版本</div>
-                        <div class="v">v{$version|default='0.0.15'}
-                            {if condition="$vinfo.ok eq 1"}
-                            <small>（远程：v{$vinfo.remote_version}）</small>
-                            {/if}
-                        </div>
-                    </div>
-                    <div class="stat">
-                        <div class="k">版本状态</div>
-                        <div class="v">
-                            {if condition="$vinfo.ok eq 1"}
-                                {if condition="$vinfo.has_update eq 1"}<span class="badge badge-update">发现新版本</span>{else /}<span class="badge badge-ok">已是最新</span>{/if}
-                            {else /}<span class="badge badge-err">检查失败</span>{/if}
-                            {if condition="$state eq 1"}<span class="badge badge-ok" style="margin-left:6px;">已启用</span>{else /}<span class="badge badge-muted" style="margin-left:6px;">已停用</span>{/if}
-                        </div>
-                    </div>
-                    <div class="stat">
-                        <div class="k">数据状态</div>
-                        <div class="v">{if condition="$meta_installed eq 1"}<span class="badge badge-ok">就绪</span>{else /}<span class="badge badge-err">未初始化</span>{/if}</div>
-                    </div>
-                    <div class="stat">
-                        <div class="k">云端更新组件</div>
-                        <div class="v">{if condition="$update_core_exists eq 1"}<span class="badge badge-ok">已部署</span>{else /}<span class="badge badge-err">未部署</span>{/if}</div>
-                    </div>
-                    <div class="stat">
-                        <div class="k">更新源</div>
-                        <div class="v">{$update_source|default='mirror'}</div>
-                    </div>
-                    {if condition="!empty($installed_at)"}
-                    <div class="stat">
-                        <div class="k">安装时间</div>
-                        <div class="v">{$installed_at}</div>
-                    </div>
-                    {/if}
+                <div class="ver-row"><span class="k">当前版本</span><span class="v">v{$version|default='0.0.16'}</span></div>
+                <div class="ver-row">
+                    <span class="k">最新版本</span>
+                    <span class="v">
+                        {if condition="$vinfo.ok eq 1"}v{$vinfo.remote_version}
+                            {if condition="$vinfo.has_update eq 1"}<span class="badge badge-update" style="margin-left:8px;">发现新版本</span>{else /}<span class="badge badge-ok" style="margin-left:8px;">已是最新</span>{/if}
+                        {else /}<span style="color:var(--danger);font-size:12px;font-weight:400;">{$vinfo.msg}</span>{/if}
+                    </span>
+                </div>
+                <div class="ver-row">
+                    <span class="k">更新分支</span>
+                    <span class="v" style="font-size:13px;font-weight:400;color:var(--muted);">main（固定，不可更改）</span>
                 </div>
                 <div class="actions">
-                    <a class="btn" href="{:addon_url('mxgt/admin/config')}">插件配置</a>
-                    <a class="btn btn-ghost" href="{:addon_url('mxgt/admin/checkUpdate')}">检查更新</a>
+                    <a class="btn btn-ghost" href="{:addon_url('mxgt/admin/config', ['check' => 1])}">检查更新</a>
                     <a class="btn btn-accent" href="{:addon_url('mxgt/admin/config')}#online-update">在线更新</a>
                 </div>
                 <div class="tip">「检查更新 / 在线更新」需将 mxthxt 文件夹部署在苹果CMS根目录（与 addons 同级）后方可使用；下载前自动对多镜像测速选优，圆形进度环实时显示进度。</div>
@@ -168,15 +145,35 @@
         </div>
 
         <div class="card">
-            <div class="card-hd">插件说明</div>
+            <div class="card-hd">更新日志</div>
             <div class="card-bd">
-                <p class="desc">
-                    沫兮官替官解系统可在新版苹果CMS后台完美使用，支持在线更新，国内用户可通过 GitHub 镜像进行远程更新。
-                    插件部署要求：<br>
-                    1. <b>mxgt</b> 文件夹必须放在苹果CMS的 <b>addons</b> 目录内，才能被正确启用和加载；<br>
-                    2. <b>mxthxt</b> 文件夹必须放在苹果CMS <b>根目录</b>（与 addons 同级）。<br>
-                    更多信息请参见项目 README.md。
-                </p>
+                <div class="log-item">
+                    <span class="lv">v0.0.16</span><span class="lt">2026-09-15</span>
+                    <ul>
+                        <li>整理代码结构：mxthxt 分为 core / config / version 子目录，插件仅保留 mxgt 与 mxthxt 两目录。</li>
+                        <li>界面精简：只展示「当前版本 / 最新版本 / 更新日志」，移除运行状态；分支固定为 main 且后台默认隐藏不可更改。</li>
+                    </ul>
+                </div>
+                <div class="log-item">
+                    <span class="lv">v0.0.15</span><span class="lt">2026-09-15</span>
+                    <ul>
+                        <li>多镜像先测速再下载（自动选择最快镜像）。</li>
+                        <li>在线更新进度条改为 SVG 圆形进度环。</li>
+                    </ul>
+                </div>
+                <div class="log-item">
+                    <span class="lv">v0.0.14</span><span class="lt">2026-09-15</span>
+                    <ul>
+                        <li>修复「请求更新源失败」：检查与下载增加多镜像自动切换 + 官方源兜底。</li>
+                    </ul>
+                </div>
+                <div class="log-item">
+                    <span class="lv">v0.0.13</span><span class="lt">2026-09-15</span>
+                    <ul>
+                        <li>插件独立登录（弹窗登录卡片）。</li>
+                        <li>主界面改为左侧栏布局，侧边栏含「在线更新」。</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </main>

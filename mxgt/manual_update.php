@@ -27,11 +27,11 @@ if (!defined('DS')) {
     define('DS', DIRECTORY_SEPARATOR);
 }
 if (!defined('ROOT_PATH')) {
-    // 本脚本可位于 {根}/addons/mxgt/ 或开发目录 {根}/mxgt/，向上逐级定位含 mxthxt/Update.php 的根目录
+    // 本脚本可位于 {根}/addons/mxgt/ 或开发目录 {根}/mxgt/，向上逐级定位含 mxthxt/core/Update.php 的根目录
     $rootDir = __DIR__;
     for ($i = 0; $i <= 4; $i++) {
         $dir = ($i === 0) ? __DIR__ : dirname(__DIR__, $i);
-        if (is_file(rtrim($dir, '/\\') . DS . 'mxthxt' . DS . 'Update.php')) {
+        if (is_file(rtrim($dir, '/\\') . DS . 'mxthxt' . DS . 'core' . DS . 'Update.php')) {
             $rootDir = rtrim($dir, '/\\');
             break;
         }
@@ -74,13 +74,13 @@ foreach ($argv as $a) {
 if (!$isCli && !$yes) { $yes = true; } // 浏览器访问视为已授权直接执行
 
 // ---------- 载入云端更新核心 ----------
-$updateCore = ROOT_PATH . 'mxthxt' . DS . 'Update.php';
+$updateCore = ROOT_PATH . 'mxthxt' . DS . 'core' . DS . 'Update.php';
 if (!is_file($updateCore)) {
     fail('未检测到云端更新组件：' . $updateCore . "（请将 mxthxt 文件夹上传至苹果CMS根目录，与 addons 同级）");
 }
 require_once $updateCore;
 if (!class_exists('MxthxtUpdate')) {
-    fail('云端更新组件加载失败，请检查 mxthxt/Update.php 是否完整');
+    fail('云端更新组件加载失败，请检查 mxthxt/core/Update.php 是否完整');
 }
 $update = new MxthxtUpdate();
 
@@ -93,14 +93,14 @@ if (is_file($iniFile)) {
     $localVersion = (is_array($ini) && isset($ini['version'])) ? $ini['version'] : '';
 }
 
-// 插件配置：优先读部署到 addons/mxgt/config.php，其次本目录 config.php，最后回退 mxthxt/config.php
+// 插件配置：优先读部署到 addons/mxgt/config.php，其次本目录 config.php，最后回退 mxthxt/config/config.php
 $source = 'mirror';
 $repo = '';
 $customUrl = '';
 $ref = array(
     ROOT_PATH . 'addons' . DS . 'mxgt' . DS . 'config.php',
     __DIR__ . DS . 'config.php',
-    ROOT_PATH . 'mxthxt' . DS . 'config.php',
+    ROOT_PATH . 'mxthxt' . DS . 'config' . DS . 'config.php',
 );
 foreach ($ref as $cfgFile) {
     if (is_file($cfgFile) && ($c = @include $cfgFile) && is_array($c)) {
@@ -110,7 +110,7 @@ foreach ($ref as $cfgFile) {
             if ($item['name'] === 'github_repo' && $repo === '')              { $repo = isset($item['value']) ? $item['value'] : ''; }
             if ($item['name'] === 'update_custom_url' && $customUrl === '')   { $customUrl = isset($item['value']) ? $item['value'] : ''; }
         }
-        // 兼容 mxthxt/config.php 的顶层 github_repo 键
+        // 兼容 mxthxt/config/config.php 的顶层 github_repo 键
         if ($repo === '' && isset($c['github_repo'])) { $repo = (string) $c['github_repo']; }
         break;
     }

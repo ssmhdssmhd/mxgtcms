@@ -2,7 +2,7 @@
 
 > 项目名称：沫兮官替官解系统
 > 项目代号：mxgtcms
-> 当前版本：v0.0.15
+> 当前版本：v0.0.16
 > 更新日期：2026-09-15
 
 ---
@@ -40,9 +40,12 @@
 │       ├── controller/      # 控制器（后台 Admin / 前台 Index）
 │       └── view/            # 模板（admin/ 后台页、index/ 前台页）
 └── mxthxt/                  # 【必须】放于苹果CMS根目录（与 addons 同级）
-    ├── config.php           # 云端更新配置（GitHub 仓库 / 镜像）
-    ├── version.php          # 组件版本
-    └── Update.php           # 云端更新核心（检查/下载/备份/覆盖）
+    ├── core/                # 云端更新核心
+    │   └── Update.php       # 检查/下载(多镜像测速选优)/备份/覆盖
+    ├── config/              # 云端更新配置（GitHub 仓库 / 镜像 / 分支）
+    │   └── config.php
+    └── version/             # 组件版本信息
+        └── version.php
 ```
 
 > ⚠️ 部署约束：
@@ -105,7 +108,7 @@
 1. 请求远端更新信息接口（GitHub Releases API，国内用户走镜像），获取最新发行版信息。
 2. 比对远端版本号与本地版本号，有新版本时**优先匹配发行版中上传的更新包资产（zip）**，未匹配到则回退源码 zip（zipball）。
 3. 下载更新包至 `runtime/mxthxt/`（镜像源自动加 ghproxy 前缀加速）。
-4. 解压校验（须包含 `mxgt/info.ini` 或 `mxthxt/Update.php`）。
+4. 解压校验（须包含 `mxgt/info.ini` 或 `mxthxt/core/Update.php`）。
 5. 备份当前代码 → 覆盖 `addons/mxgt/` 与根目录 `mxthxt/` → 合并保留配置与启用状态。
 6. 刷新插件缓存完成更新。
 
@@ -116,7 +119,8 @@
 | 国内镜像源 | 默认按候选镜像自动切换（`ghfast.top` / `gh-proxy.com` / `ghproxy.net` / `mirror.ghproxy.com`），全部失败后自动回退官方源直连；下载同样多镜像自动切换 |
 | 自定义源 | 支持填写自定义更新接口地址（需返回含 `tag_name` 与 `assets`/`zipball_url` 的 JSON） |
 
-> 镜像候选列表可在 `mxthxt/config.php` 的 `mirror_api_urls` / `mirror_download_prefixes` 中维护，无需改代码即可增删镜像。
+> 镜像候选列表可在 `mxthxt/config/config.php` 的 `mirror_api_urls` / `mirror_download_prefixes` 中维护，无需改代码即可增删镜像。
+> 更新分支固定为 `main`（`mxthxt/config/config.php` 的 `branch`），插件后台默认隐藏、不可更改。
 
 ### 3.4 发布新版本（维护者）
 1. 更新 `mxgt/info.ini` 的 `version` 与 README 版本日志。
@@ -162,6 +166,7 @@ https://github.com/ssmhdssmhd/mxgtcms/releases
 
 | 版本 | 更新包文件名 | 发布时间 | 更新说明 | 下载 |
 | ---- | ---- | ---- | ---- | ---- |
+| v0.0.16 | `mxgtcms.v0.0.16 202609152110.zip` | 2026-09-15 | 整理代码结构（mxthxt 分 core/config/version 子目录）；界面精简为「当前版本 / 最新版本 / 更新日志」；分支固定 main 后台隐藏 | Releases 页 |
 | v0.0.15 | `mxgtcms.v0.0.15 202609152020.zip` | 2026-09-15 | 多镜像**先测速再下载**（选最快镜像）；更新进度条改为**圆形进度环** | Releases 页 |
 | v0.0.14 | `mxgtcms.v0.0.14 202609151900.zip` | 2026-09-15 | 修复「请求更新源失败」：检查与下载增加多镜像自动切换 + 官方源兜底（含 ghfast/gh-proxy/ghproxy.net 等） | Releases 页 |
 | v0.0.13 | `mxgtcms.v0.0.13 202609151830.zip` | 2026-09-15 | 插件独立登录（点击侧边栏入口弹登录卡片）+ 主界面改为左侧栏布局，侧边栏含「在线更新」 | Releases 页 |
@@ -198,6 +203,13 @@ https://github.com/ssmhdssmhd/mxgtcms/releases
 
 ## 五、版本更新日志
 
+### v0.0.16（2026-09-15）
+- **代码结构整理**：
+  - 仓库只保留 `mxgt/`（插件）与 `mxthxt/`（云端更新组件）两个目录；`mxthxt` 内部划分 **core / config / version** 三个子目录（`core/Update.php`、`config/config.php`、`version/version.php`），全部引用同步更新。
+- **界面精简**：
+  - 插件主界面只展示 **当前版本 / 最新版本 / 更新日志**，移除冗余的「运行状态」统计卡片；更新分支固定为 `main` 且后台默认隐藏、不可更改。
+  - 整体配色保持主色 `#657A7F`、辅色 `#B86B74`。
+
 ### v0.0.15（2026-09-15）
 - **多镜像先测速再下载**：
   - 在线更新下载前，对候选镜像（ghfast.top / gh-proxy.com / ghproxy.net / mirror.ghproxy.com / 官方直连）逐一**测速**（下载前 512KB 计算速度），自动**优先使用最快镜像**下载；测速失败的镜像自动靠后，下载失败仍会依次切换下一个并最后回退官方直连。
@@ -211,7 +223,7 @@ https://github.com/ssmhdssmhd/mxgtcms/releases
   - 更新源检查按候选镜像依次尝试：`ghfast.top` → `gh-proxy.com` → `ghproxy.net` → `mirror.ghproxy.com`，全部失败后**自动回退 GitHub 官方源直连**；任一路径成功即继续。
   - 更新包下载同样按候选镜像前缀依次尝试，最后回退官方直连；失败自动清理残留并尝试下一个地址。
   - HTTP 请求增加连接超时与重定向跟随；区分「网络失败 / 返回数据异常 / GitHub API 限流（Rate Limit）」的报错提示，便于定位问题。
-  - 镜像候选列表可在 `mxthxt/config.php` 的 `mirror_api_urls` / `mirror_download_prefixes` 中维护。
+  - 镜像候选列表可在 `mxthxt/config/config.php` 的 `mirror_api_urls` / `mirror_download_prefixes` 中维护。
 
 ### v0.0.13（2026-09-15）
 - **插件独立登录（弹窗式登录页）**：
@@ -268,7 +280,7 @@ https://github.com/ssmhdssmhd/mxgtcms/releases
 ### v0.0.5（2026-09-14）
 - **在线更新改用 GitHub Releases 发行版（Release 资产）**：
   - `check()` 优先匹配发行版中上传的更新包 zip（按前缀 `mxgtcms`），未匹配到再回退源码 zip。
-  - 更新源默认仓库指向 `ssmhdssmhd/mxgtcms`（配置页与 `mxthxt/config.php` 可改）。
+  - 更新源默认仓库指向 `ssmhdssmhd/mxgtcms`（配置页与 `mxthxt/config/config.php` 可改）。
 - README 新增「六、历史更新包」章节：按版本列出更新包文件名/时间/说明，可在 GitHub Releases 页查看下载。
 - 更新包命名示例统一为 `mxgtcms.v0.0.5 202609142258.zip`。
 
@@ -282,7 +294,7 @@ https://github.com/ssmhdssmhd/mxgtcms/releases
 
 ### v0.0.3（2026-09-14）
 - **完成在线更新代码能力**：
-  - `mxthxt/Update.php` 新增 `download()`（下载更新包，镜像源自动加 ghproxy 前缀加速）与 `apply()`（解压校验 → 备份 → 覆盖 `addons/mxgt` 与 `mxthxt` → 合并保留站长配置与启用状态）。
+  - `mxthxt/core/Update.php` 新增 `download()`（下载更新包，镜像源自动加 ghproxy 前缀加速）与 `apply()`（解压校验 → 备份 → 覆盖 `addons/mxgt` 与 `mxthxt` → 合并保留站长配置与启用状态）。
   - `check()` 返回更新包下载地址（GitHub `zipball_url`，兼容自定义源）。
   - 插件后台新增「在线更新」入口：检查 → 下载 → 备份 → 覆盖 → 刷新缓存。
   - 更新前代码自动备份至 `runtime/mxthxt/backup_时间戳/`，更新成功后删除。
@@ -301,5 +313,5 @@ https://github.com/ssmhdssmhd/mxgtcms/releases
 ### v0.0.1（2026-09-14）
 - 初始化项目，编写项目需求文档（本 README）。
 - 创建 `mxgt` 插件目录结构（旧版规范，v0.0.2 已迁移至新版规范）。
-- 创建 `mxthxt` 根目录组件（云端更新配置 + `Update.php` 版本检测核心骨架）。
+- 创建 `mxthxt` 根目录组件（云端更新配置 + `core/Update.php` 版本检测核心骨架）。
 - 实现功能：插件**配置**、**启用/停用**、**卸载**。

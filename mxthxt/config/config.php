@@ -1,13 +1,15 @@
 <?php
 /**
  * 沫兮官替官解系统 - 云端更新配置
- * 本文件位于苹果CMS根目录/mxthxt/config.php
+ * 本文件位于苹果CMS根目录/mxthxt/config/config.php
  * 部署后按需修改为实际 GitHub 仓库地址。
  */
 
 return [
     // 更新包托管的 GitHub 仓库（格式：用户名/仓库名）
     'github_repo' => 'ssmhdssmhd/mxgtcms',
+    // 更新分支：固定为 main（插件后台不可更改、不展示，保持默认隐藏）
+    'branch' => 'main',
     // GitHub 官方源地址模板
     'github_api_url' => 'https://api.github.com/repos/{repo}/releases/latest',
     // 国内镜像源地址模板（默认，兼容旧配置）

@@ -1,7 +1,7 @@
 <?php
 /**
  * 沫兮官替官解系统 - 云端更新核心
- * 本文件位于苹果CMS根目录/mxthxt/Update.php
+ * 本文件位于苹果CMS根目录/mxthxt/core/Update.php
  *
  * 职责：
  * 1. check()    检查远端最新版本，与本地版本对比，并返回更新包下载地址；
@@ -9,7 +9,7 @@
  * 3. apply()    解压更新包，备份现有代码后覆盖 addons/mxgt 与 mxthxt，
  *               并保留站长的配置与插件启用状态。
  *
- * 更新包约定：zip 内包含 mxgt/（含 info.ini）与 mxthxt/（含 Update.php）目录，
+ * 更新包约定：zip 内包含 mxgt/（含 info.ini）与 mxthxt/（含 core/Update.php）目录，
  * 与 GitHub 仓库 tag 的 archive zip（{repo}-{tag}/ 单层目录）结构兼容。
  */
 
@@ -20,7 +20,7 @@ class MxthxtUpdate
 
     public function __construct()
     {
-        $configFile = __DIR__ . DIRECTORY_SEPARATOR . 'config.php';
+        $configFile = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'config.php';
         if (is_file($configFile)) {
             $cfg = include $configFile;
             if (is_array($cfg)) {
@@ -306,10 +306,10 @@ class MxthxtUpdate
         }
 
         $hasMxgt = is_dir($root . 'mxgt') && is_file($root . 'mxgt/info.ini');
-        $hasMxthxt = is_dir($root . 'mxthxt') && is_file($root . 'mxthxt/Update.php');
+        $hasMxthxt = is_dir($root . 'mxthxt') && is_file($root . 'mxthxt/core/Update.php');
         if (!$hasMxgt && !$hasMxthxt) {
             $this->removeDir($tmp);
-            return $this->fail('更新包内容不完整：mxgt/info.ini 或 mxthxt/Update.php 缺失');
+            return $this->fail('更新包内容不完整：mxgt/info.ini 或 mxthxt/core/Update.php 缺失');
         }
 
         // 备份当前代码

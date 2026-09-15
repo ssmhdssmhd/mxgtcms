@@ -124,7 +124,7 @@ class Admin extends Controller
         }
 
         // 云端更新组件（mxthxt 需放在苹果CMS根目录，与 addons 同级）
-        $updateCoreFile = ROOT_PATH . 'mxthxt' . DS . 'Update.php';
+        $updateCoreFile = $this->updateCoreFile();
         $updateCoreExists = is_file($updateCoreFile) ? 1 : 0;
 
         // 当前配置（模板中也可用 {$config.xxx}）
@@ -186,7 +186,7 @@ class Admin extends Controller
     public function doUpdate()
     {
         $progressFile = ROOT_PATH . 'runtime/mxthxt' . DS . 'update_progress.json';
-        $updateCoreFile = ROOT_PATH . 'mxthxt' . DS . 'Update.php';
+        $updateCoreFile = $this->updateCoreFile();
         if (!is_file($updateCoreFile)) {
             $this->writeProgress($progressFile, 'error', 0, '未检测到云端更新组件，请将 mxthxt 文件夹上传至苹果CMS根目录（与 addons 同级）');
             $this->jsonOut(['code' => 0, 'msg' => '未检测到云端更新组件，请将 mxthxt 文件夹上传至苹果CMS根目录（与 addons 同级）']);
@@ -308,7 +308,7 @@ class Admin extends Controller
      */
     public function checkUpdate()
     {
-        $updateCoreFile = ROOT_PATH . 'mxthxt' . DS . 'Update.php';
+        $updateCoreFile = $this->updateCoreFile();
         if (!is_file($updateCoreFile)) {
             $this->error('未检测到云端更新组件，请将 mxthxt 文件夹上传至苹果CMS根目录（与 addons 同级）');
         }
@@ -369,7 +369,7 @@ class Admin extends Controller
             'time' => time(),
         ];
 
-        $updateCoreFile = ROOT_PATH . 'mxthxt' . DS . 'Update.php';
+        $updateCoreFile = $this->updateCoreFile();
         if (is_file($updateCoreFile)) {
             require_once $updateCoreFile;
             try {
@@ -391,5 +391,14 @@ class Admin extends Controller
         @mkdir(ROOT_PATH . 'runtime/mxthxt', 0755, true);
         @file_put_contents($cacheFile, json_encode($data, JSON_UNESCAPED_UNICODE));
         return $data;
+    }
+
+    /**
+     * 云端更新核心文件路径（mxthxt/core/Update.php）
+     * @return string
+     */
+    protected function updateCoreFile()
+    {
+        return ROOT_PATH . 'mxthxt' . DS . 'core' . DS . 'Update.php';
     }
 }
