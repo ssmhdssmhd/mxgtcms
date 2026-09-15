@@ -94,7 +94,14 @@
         var btn = document.getElementById('btn-login');
         btn.disabled = true; btn.textContent = '登录中...';
         var fd = new FormData(document.getElementById('login-form'));
-        fetch(LOGIN_URL, { method: 'POST', body: fd }).then(function (r) { return r.json(); }).then(function (d) {
+        fetch(LOGIN_URL, { method: 'POST', body: fd }).then(function (r) {
+            return r.text().then(function (t) {
+                try { return JSON.parse(t); } catch (e) {
+                    // 非 JSON 响应（如 500 / 跳转页）：给出可定位提示
+                    return { code: 0, msg: '服务器返回异常（' + r.status + '），请确认插件已更新到最新版本' };
+                }
+            });
+        }).then(function (d) {
             btn.disabled = false; btn.textContent = '登 录';
             if (d && d.code === 1) {
                 location.href = INDEX_URL;

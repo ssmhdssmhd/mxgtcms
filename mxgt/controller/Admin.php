@@ -38,7 +38,7 @@ class Admin extends Controller
 
         // 插件独立登录校验：未登录时（登录/退出动作除外）一律跳转到弹窗登录页
         $action = strtolower($this->request->action());
-        if (session('mxgt_login') !== 1 && !in_array($action, ['login', 'doLogin', 'logout'], true)) {
+        if (session('mxgt_login') !== 1 && !in_array($action, ['login', 'dologin', 'logout'], true)) {
             $this->redirect(addon_url('mxgt/admin/login'));
             exit;
         }
