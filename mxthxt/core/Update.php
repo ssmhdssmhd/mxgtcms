@@ -347,6 +347,18 @@ class MxthxtUpdate
             }
         }
 
+        // 静态资源（static/addons/mxgt/ 下的 logo/背景图等），更新包包含时同步覆盖
+        $staticSrc = $root . 'static/addons/mxgt';
+        $staticDst = $this->rootPath . 'static/addons/mxgt/';
+        if (is_dir($staticSrc)) {
+            if (is_dir($staticDst)) {
+                @rename($staticDst, $backup . 'static_mxgt');
+            }
+            if (!$this->copyDir($staticSrc, $staticDst)) {
+                $errors[] = 'static';
+            }
+        }
+
         $this->removeDir($tmp);
 
         if ($errors) {

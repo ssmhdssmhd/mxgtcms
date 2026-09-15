@@ -39,13 +39,18 @@
 │       ├── install.sql      # 安装SQL（建元数据表，__PREFIX__ 占位符）
 │       ├── controller/      # 控制器（后台 Admin / 前台 Index）
 │       └── view/            # 模板（admin/ 后台页、index/ 前台页）
-└── mxthxt/                  # 【必须】放于苹果CMS根目录（与 addons 同级）
-    ├── core/                # 云端更新核心
-    │   └── Update.php       # 检查/下载(多镜像测速选优)/备份/覆盖
-    ├── config/              # 云端更新配置（GitHub 仓库 / 镜像 / 分支）
-    │   └── config.php
-    └── version/             # 组件版本信息
-        └── version.php
+├── mxthxt/                  # 【必须】放于苹果CMS根目录（与 addons 同级）
+│   ├── core/                # 云端更新核心
+│   │   └── Update.php       # 检查/下载(多镜像测速选优)/备份/覆盖
+│   ├── config/              # 云端更新配置（GitHub 仓库 / 镜像 / 分支）
+│   │   └── config.php
+│   └── version/             # 组件版本信息
+│       └── version.php
+└── static/                  # 站点静态目录
+    └── addons/
+        └── mxgt/            # 插件静态资源（logo.png / bg.jpg 背景图，随发布包分发）
+            ├── logo.png
+            └── bg.jpg
 ```
 
 > ⚠️ 部署约束：
@@ -64,16 +69,18 @@
 ## 二、安装与使用
 
 ### 2.1 安装步骤（压缩包方式，推荐）
-1. 下载发布压缩包（如 `mxgtcms.v0.0.5 202609142xxx.zip`，内含 `mxgt/` 与 `mxthxt/` 两个目录），可查看下文「六、历史更新包」获取各版本包。
+1. 下载发布压缩包（如 `mxgtcms.v0.0.24 202609152334.zip`，内含 `mxgt/`、`mxthxt/` 与 `static/` 三个目录），可查看下文「六、历史更新包」获取各版本包。
 2. 解压后，将 `mxgt/` 整个文件夹上传至苹果 CMS 的 `addons/` 目录。
 3. 将 `mxthxt/` 整个文件夹上传至苹果 CMS **根目录**（与 `addons/` 同级）。
-4. 登录苹果 CMS 后台 → 「应用中心 → 应用插件」，找到「沫兮官替官解系统」。
-5. 点击 **启用**，即可使用（启用时自动完成元数据初始化）。
+4. 将 `static/` 目录与苹果 CMS **根目录 static/** 合并（缺目录就新建，内含插件 Logo 与背景图 `static/addons/mxgt/`）。
+5. 登录苹果 CMS 后台 → 「应用中心 → 应用插件」，找到「沫兮官替官解系统」。
+6. 点击 **启用**，即可使用（启用时自动完成元数据初始化）。
 
 > 备选：也可以在「应用中心 → 应用插件 → 本地上传」直接上传压缩包安装。
 > 默认站点未强制签名时可直接安装；若站点开启了
 > `require_local_signature`（后台配置 addon.require_local_signature=1），
 > 则需要带签名（package.manifest.json + package.sig）的安装包。
+> 在线更新时若更新包内含 `static/` 目录，会自动同步覆盖根 `static/addons/mxgt/`。
 
 ### 2.2 启用 / 停用
 - 后台插件列表直接操作「启用 / 停用」，状态写回 `info.ini` 的 `state` 字段，即开即用。
@@ -217,6 +224,7 @@ https://github.com/ssmhdssmhd/mxgtcms/releases
 - **顶部横幅视觉升级**：
   - 六个后台页面顶部横幅（hero）改用上传的背景图 `bg.jpg` 居中铺满，叠加渐变遮罩保证文字可读。
   - 横幅图标位置换用 `logo.png`（内容不变），白色圆角底板 + 合适尺寸展示，与侧边栏 logo 呼应。
+- **在线更新同步静态资源**：更新包若内含 `static/` 目录（Logo/背景图），在线更新会自动同步覆盖根 `static/addons/mxgt/`，避免新版资源无法通过在线更新部署。
 
 ### v0.0.23（2026-09-15）
 - **在线更新拆分为独立页面**：
