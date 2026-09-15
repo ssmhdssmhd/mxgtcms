@@ -177,7 +177,7 @@
             <div class="ver-row">
                 <span class="k">远程版本</span>
                 <span class="v">
-                    {if condition="$vinfo.ok eq 1"}v{$vinfo.remote_version}{else /}<span style="color:var(--danger);font-size:12px;">{$vinfo.msg}</span>{/if}
+                    {if condition="$vinfo.ok eq 1"}{$vinfo.remote_version}{else /}<span style="color:var(--danger);font-size:12px;">{$vinfo.msg}</span>{/if}
                 </span>
             </div>
             <div class="ver-row">

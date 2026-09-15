@@ -127,7 +127,7 @@
                 <div class="ver-row">
                     <span class="k">最新版本</span>
                     <span class="v">
-                        {if condition="$vinfo.ok eq 1"}v{$vinfo.remote_version}
+                        {if condition="$vinfo.ok eq 1"}{$vinfo.remote_version}
                             {if condition="$vinfo.has_update eq 1"}<span class="badge badge-update" style="margin-left:8px;">发现新版本</span>{else /}<span class="badge badge-ok" style="margin-left:8px;">已是最新</span>{/if}
                         {else /}<span style="color:var(--danger);font-size:12px;font-weight:400;">{$vinfo.msg}</span>{/if}
                     </span>
