@@ -7,78 +7,107 @@
 <style>
     :root {
         --primary: #657A7F;
-        --primary-dark: #54686D;
+        --primary-dark: #4E6267;
         --accent: #B86B74;
-        --accent-dark: #A05A63;
-        --bg: #F2F4F5;
+        --accent-dark: #9E5560;
+        --bg: #EEF1F2;
         --card: #FFFFFF;
-        --border: #E2E7E9;
-        --text: #333C3F;
-        --muted: #8A9599;
+        --border: #E3E8EA;
+        --text: #2E383B;
+        --muted: #7C888C;
+        --ok: #4E9A6E;
         --danger: #C2504F;
-        --ok: #5FA878;
+        --radius: 14px;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: var(--bg); font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif; color: var(--text); padding: 20px; }
 
-    .shell { display: flex; gap: 18px; align-items: flex-start; min-height: calc(100vh - 40px); }
+    .shell { display: flex; gap: 18px; align-items: flex-start; max-width: 1180px; margin: 0 auto; }
     .main { flex: 1; min-width: 0; }
-    .page-hd { font-size: 18px; font-weight: 600; color: var(--primary-dark); margin-bottom: 14px; display: flex; align-items: center; }
-    .page-hd::before { content: ""; width: 4px; height: 16px; background: var(--primary); border-radius: 2px; margin-right: 8px; }
 
-    /* 左侧栏 */
+    /* ===== 左侧栏 ===== */
     .side {
-        width: 210px; flex-shrink: 0;
-        background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
-        border-radius: 10px; padding: 16px 12px; color: #fff;
-        display: flex; flex-direction: column; min-height: 560px;
-        box-shadow: 0 4px 14px rgba(101,122,127,.25);
+        width: 208px; flex-shrink: 0;
+        background: linear-gradient(180deg, #556A6F 0%, var(--primary-dark) 100%);
+        border-radius: var(--radius); padding: 18px 12px; color: #fff;
+        display: flex; flex-direction: column; min-height: 620px;
+        box-shadow: 0 8px 24px rgba(78,98,103,.28);
+        position: sticky; top: 20px;
     }
-    .side-logo { text-align: center; padding: 6px 0 14px; border-bottom: 1px solid rgba(255,255,255,.18); margin-bottom: 12px; }
-    .side-logo img { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; background: rgba(255,255,255,.18); }
-    .side-title { font-size: 14px; font-weight: 600; margin-top: 8px; }
-    .side-sub { font-size: 11px; opacity: .8; margin-top: 2px; }
+    .side-logo { text-align: center; padding: 4px 0 16px; border-bottom: 1px solid rgba(255,255,255,.16); margin-bottom: 12px; }
+    .side-logo img { width: 52px; height: 52px; border-radius: 14px; object-fit: cover; background: rgba(255,255,255,.16); box-shadow: 0 4px 12px rgba(0,0,0,.18); }
+    .side-title { font-size: 15px; font-weight: 700; margin-top: 10px; letter-spacing: 1px; }
+    .side-sub { font-size: 10px; opacity: .75; margin-top: 3px; letter-spacing: 1px; text-transform: uppercase; }
+    .side-grp { font-size: 11px; color: rgba(255,255,255,.55); margin: 14px 6px 6px; letter-spacing: 1px; }
+    .side-grp:first-of-type { margin-top: 4px; }
     .side-item {
-        display: block; padding: 10px 14px; border-radius: 8px;
-        color: rgba(255,255,255,.92); font-size: 13px; text-decoration: none;
-        margin-bottom: 6px; transition: background .2s;
+        display: flex; align-items: center; padding: 10px 13px; border-radius: 9px;
+        color: rgba(255,255,255,.9); font-size: 13px; text-decoration: none;
+        margin-bottom: 4px; transition: all .2s;
     }
-    .side-item:hover { background: rgba(255,255,255,.14); }
-    .side-item.on { background: rgba(255,255,255,.22); font-weight: 600; }
+    .side-item::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.4); margin-right: 10px; flex-shrink: 0; transition: all .2s; }
+    .side-item:hover { background: rgba(255,255,255,.12); }
+    .side-item.on { background: rgba(255,255,255,.18); font-weight: 600; box-shadow: inset 3px 0 0 var(--accent); }
+    .side-item.on::before { background: var(--accent); box-shadow: 0 0 0 3px rgba(184,107,116,.3); }
     .side-foot {
-        margin-top: auto; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.18);
+        margin-top: auto; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.16);
         display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: rgba(255,255,255,.85);
     }
-    .side-logout { color: #fff; text-decoration: none; padding: 4px 10px; border-radius: 6px; background: rgba(255,255,255,.15); font-size: 12px; }
+    .side-logout { color: #fff; text-decoration: none; padding: 5px 12px; border-radius: 7px; background: rgba(255,255,255,.14); font-size: 12px; transition: all .2s; }
     .side-logout:hover { background: rgba(255,255,255,.28); }
 
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 2px 8px rgba(51,60,63,.05); overflow: hidden; }
-    .card-hd { padding: 14px 20px; border-bottom: 1px solid var(--border); font-size: 15px; font-weight: 600; color: var(--primary-dark); display: flex; align-items: center; }
-    .card-hd::before { content: ""; width: 4px; height: 14px; background: var(--primary); border-radius: 2px; margin-right: 8px; }
-    .card-bd { padding: 20px; }
-
-    .form-item { margin-bottom: 18px; }
-    .form-item .label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
-    .form-item .tip { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.7; }
-    .input, .select, .textarea {
-        width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 6px;
-        font-size: 14px; background: #FBFCFC; color: var(--text); outline: none; transition: all .2s;
+    /* ===== 顶部渐变横幅 ===== */
+    .hero {
+        position: relative; overflow: hidden;
+        background: linear-gradient(120deg, var(--primary-dark) 0%, var(--primary) 52%, #7F9499 100%);
+        border-radius: var(--radius); padding: 26px 30px; margin-bottom: 18px; color: #fff;
+        box-shadow: 0 8px 24px rgba(101,122,127,.25);
     }
-    .input:focus, .select:focus, .textarea:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(101,122,127,.12); }
-    .textarea { height: 90px; resize: vertical; }
+    .hero::before { content: ""; position: absolute; right: -70px; top: -90px; width: 240px; height: 240px; border-radius: 50%; background: rgba(255,255,255,.08); }
+    .hero::after { content: ""; position: absolute; right: 46px; bottom: -100px; width: 180px; height: 180px; border-radius: 50%; background: rgba(184,107,116,.4); }
+    .hero .h-ic { position: relative; z-index: 1; width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,.18); display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 12px; }
+    .hero h1 { position: relative; z-index: 1; font-size: 22px; font-weight: 700; letter-spacing: 1px; }
+    .hero p { position: relative; z-index: 1; font-size: 13px; opacity: .88; margin-top: 6px; line-height: 1.7; }
 
-    .btn { display: inline-block; padding: 9px 20px; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; text-decoration: none; color: #fff; background: var(--primary); transition: all .2s; }
-    .btn:hover { background: var(--primary-dark); }
-    .btn-back { background: #fff; color: var(--muted); border: 1px solid var(--border); margin-left: 8px; }
-    .btn-back:hover { color: var(--text); background: var(--bg); }
-    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
-    .hint { font-size: 12px; color: var(--muted); margin-top: 14px; line-height: 1.8; }
+    /* ===== 卡片 ===== */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 6px 20px rgba(46,56,59,.06); overflow: hidden; margin-bottom: 16px; }
+    .card-hd { display: flex; align-items: center; gap: 10px; padding: 16px 22px; border-bottom: 1px solid var(--border); font-size: 15px; font-weight: 700; color: var(--primary-dark); }
+    .card-hd .ic { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .card-hd .ic.accent { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); }
+    .card-bd { padding: 24px 22px; }
+
+    /* ===== 表单 ===== */
+    .form-item { margin-bottom: 22px; }
+    .form-item .label { display: flex; align-items: center; font-size: 13.5px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+    .form-item .label::before { content: ""; width: 3px; height: 13px; border-radius: 2px; background: var(--accent); margin-right: 8px; }
+    .form-item .tip { font-size: 12px; color: var(--muted); margin-top: 7px; line-height: 1.7; }
+    .input, .select, .textarea {
+        width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 9px;
+        font-size: 14px; background: #FBFCFC; color: var(--text); outline: none; transition: all .2s;
+        box-shadow: inset 0 1px 2px rgba(46,56,59,.04);
+    }
+    .input::placeholder, .textarea::placeholder { color: #B5BEC2; }
+    .input:focus, .select:focus, .textarea:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(101,122,127,.14); }
+    .select { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237C888C' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 38px; cursor: pointer; }
+    .textarea { height: 96px; resize: vertical; }
+
+    /* ===== 按钮 ===== */
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; padding-top: 20px; border-top: 1px dashed var(--border); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; height: 42px; padding: 0 28px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .2s; }
+    .btn-primary { color: #fff; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); box-shadow: 0 4px 12px rgba(101,122,127,.32); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(101,122,127,.4); }
+    .btn-accent { color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); box-shadow: 0 4px 12px rgba(184,107,116,.3); }
+    .btn-accent:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(184,107,116,.38); }
+    .btn-ghost { color: var(--primary); background: transparent; border: 1px solid var(--primary); }
+    .btn-ghost:hover { background: rgba(101,122,127,.08); }
+    .hint { font-size: 12px; color: var(--muted); margin-top: 16px; line-height: 1.9; }
 
     @media (max-width: 900px) {
         .shell { flex-direction: column; }
-        .side { width: 100%; min-height: 0; flex-direction: row; flex-wrap: wrap; align-items: center; }
+        .side { width: 100%; min-height: 0; position: static; flex-direction: row; flex-wrap: wrap; align-items: center; }
         .side-logo { flex: 1; border-bottom: none; margin-bottom: 0; text-align: left; }
         .side-nav { display: flex; gap: 6px; flex-wrap: wrap; }
+        .side-grp { display: none; }
         .side-item { margin-bottom: 0; }
         .side-foot { margin-top: 0; border-top: none; padding-top: 0; }
     }
@@ -96,9 +125,11 @@
             <div class="side-sub">Search Settings</div>
         </div>
         <nav class="side-nav">
+            <div class="side-grp">功能设置</div>
             <a class="side-item {if condition="$active eq 'search'"}on{/if}" href="{:addon_url('mxgt/admin/search')}">搜索设置</a>
             <a class="side-item {if condition="$active eq 'match'"}on{/if}" href="{:addon_url('mxgt/admin/match')}">匹配设置</a>
             <a class="side-item {if condition="$active eq 'jsoncall'"}on{/if}" href="{:addon_url('mxgt/admin/jsoncall')}">JSON 调用</a>
+            <div class="side-grp">系统</div>
             <a class="side-item {if condition="$active eq 'index'"}on{/if}" href="{:addon_url('mxgt/admin/index')}">版本信息</a>
             <a class="side-item {if condition="$active eq 'config'"}on{/if}" href="{:addon_url('mxgt/admin/config')}">插件配置</a>
             <a class="side-item {if condition="$active eq 'update'"}on{/if}" href="{:addon_url('mxgt/admin/config')}#online-update">在线更新</a>
@@ -111,10 +142,14 @@
 
     <!-- 右侧内容 -->
     <main class="main">
-        <div class="page-hd">搜索设置</div>
+        <div class="hero">
+            <div class="h-ic">🔍</div>
+            <h1>搜索设置</h1>
+            <p>配置官方搜索能力：接口地址、请求参数与返回条数，保存后即时生效。</p>
+        </div>
 
         <div class="card">
-            <div class="card-hd">搜索设置</div>
+            <div class="card-hd"><span class="ic">⚙</span>搜索设置</div>
             <div class="card-bd">
                 <form method="post" action="{:addon_url('mxgt/admin/search')}">
                     {foreach name="config" item="item"}
@@ -129,23 +164,23 @@
                         </select>
                         {/case}
                         {case value="textarea"}
-                        <textarea name="row[{$item.name}]" class="textarea">{$item.value}</textarea>
+                        <textarea name="row[{$item.name}]" class="textarea" placeholder="{$item.tip}">{$item.value}</textarea>
                         {/case}
                         {case value="number"}
                         <input type="number" name="row[{$item.name}]" class="input" value="{$item.value}">
                         {/case}
                         {default /}
-                        <input type="text" name="row[{$item.name}]" class="input" value="{$item.value}">
+                        <input type="text" name="row[{$item.name}]" class="input" placeholder="{$item.tip}" value="{$item.value}">
                         {/switch}
                         {if condition="!empty($item['tip'])"}<div class="tip">{$item.tip}</div>{/if}
                     </div>
                     {/foreach}
                     <div class="actions">
-                        <button type="submit" class="btn">保存配置</button>
-                        <a class="btn btn-back" href="{:addon_url('mxgt/admin/index')}">返回首页</a>
+                        <button type="submit" class="btn btn-primary">保存配置</button>
+                        <a class="btn btn-ghost" href="{:addon_url('mxgt/admin/index')}">返回首页</a>
                     </div>
                 </form>
-                <div class="hint">搜索设置为官方搜索能力预留的接口与参数配置，保存后即时生效。</div>
+                <div class="hint">提示：搜索设置为官方搜索能力预留的接口与参数配置，与「插件配置」共用同一份配置存储，任意入口保存互相同步。</div>
             </div>
         </div>
     </main>

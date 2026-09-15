@@ -6,89 +6,114 @@
 <title>沫兮官替官解系统 - 版本信息</title>
 <style>
     :root {
-        --primary: #657A7F;      /* 主色 */
-        --primary-dark: #54686D;
-        --accent: #B86B74;       /* 辅色 */
-        --accent-dark: #A05A63;
-        --bg: #F2F4F5;
+        --primary: #657A7F;
+        --primary-dark: #4E6267;
+        --accent: #B86B74;
+        --accent-dark: #9E5560;
+        --bg: #EEF1F2;
         --card: #FFFFFF;
-        --border: #E2E7E9;
-        --text: #333C3F;
-        --muted: #8A9599;
+        --border: #E3E8EA;
+        --text: #2E383B;
+        --muted: #7C888C;
+        --ok: #4E9A6E;
         --danger: #C2504F;
-        --ok: #5FA878;
+        --radius: 14px;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: var(--bg); font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif; color: var(--text); padding: 20px; }
 
-    .shell { display: flex; gap: 18px; align-items: flex-start; min-height: calc(100vh - 40px); }
+    .shell { display: flex; gap: 18px; align-items: flex-start; max-width: 1180px; margin: 0 auto; }
     .main { flex: 1; min-width: 0; }
-    .page-hd { font-size: 18px; font-weight: 600; color: var(--primary-dark); margin-bottom: 14px; display: flex; align-items: center; }
-    .page-hd::before { content: ""; width: 4px; height: 16px; background: var(--primary); border-radius: 2px; margin-right: 8px; }
 
-    /* 左侧栏 */
+    /* ===== 左侧栏 ===== */
     .side {
-        width: 210px; flex-shrink: 0;
-        background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
-        border-radius: 10px; padding: 16px 12px; color: #fff;
-        display: flex; flex-direction: column; min-height: 560px;
-        box-shadow: 0 4px 14px rgba(101,122,127,.25);
+        width: 208px; flex-shrink: 0;
+        background: linear-gradient(180deg, #556A6F 0%, var(--primary-dark) 100%);
+        border-radius: var(--radius); padding: 18px 12px; color: #fff;
+        display: flex; flex-direction: column; min-height: 620px;
+        box-shadow: 0 8px 24px rgba(78,98,103,.28);
+        position: sticky; top: 20px;
     }
-    .side-logo { text-align: center; padding: 6px 0 14px; border-bottom: 1px solid rgba(255,255,255,.18); margin-bottom: 12px; }
-    .side-logo img { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; background: rgba(255,255,255,.18); }
-    .side-title { font-size: 14px; font-weight: 600; margin-top: 8px; }
-    .side-sub { font-size: 11px; opacity: .8; margin-top: 2px; }
+    .side-logo { text-align: center; padding: 4px 0 16px; border-bottom: 1px solid rgba(255,255,255,.16); margin-bottom: 12px; }
+    .side-logo img { width: 52px; height: 52px; border-radius: 14px; object-fit: cover; background: rgba(255,255,255,.16); box-shadow: 0 4px 12px rgba(0,0,0,.18); }
+    .side-title { font-size: 15px; font-weight: 700; margin-top: 10px; letter-spacing: 1px; }
+    .side-sub { font-size: 10px; opacity: .75; margin-top: 3px; letter-spacing: 1px; text-transform: uppercase; }
+    .side-grp { font-size: 11px; color: rgba(255,255,255,.55); margin: 14px 6px 6px; letter-spacing: 1px; }
+    .side-grp:first-of-type { margin-top: 4px; }
     .side-item {
-        display: block; padding: 10px 14px; border-radius: 8px;
-        color: rgba(255,255,255,.92); font-size: 13px; text-decoration: none;
-        margin-bottom: 6px; transition: background .2s;
+        display: flex; align-items: center; padding: 10px 13px; border-radius: 9px;
+        color: rgba(255,255,255,.9); font-size: 13px; text-decoration: none;
+        margin-bottom: 4px; transition: all .2s;
     }
-    .side-item:hover { background: rgba(255,255,255,.14); }
-    .side-item.on { background: rgba(255,255,255,.22); font-weight: 600; }
+    .side-item::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.4); margin-right: 10px; flex-shrink: 0; transition: all .2s; }
+    .side-item:hover { background: rgba(255,255,255,.12); }
+    .side-item.on { background: rgba(255,255,255,.18); font-weight: 600; box-shadow: inset 3px 0 0 var(--accent); }
+    .side-item.on::before { background: var(--accent); box-shadow: 0 0 0 3px rgba(184,107,116,.3); }
     .side-foot {
-        margin-top: auto; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.18);
+        margin-top: auto; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.16);
         display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: rgba(255,255,255,.85);
     }
-    .side-logout { color: #fff; text-decoration: none; padding: 4px 10px; border-radius: 6px; background: rgba(255,255,255,.15); font-size: 12px; }
+    .side-logout { color: #fff; text-decoration: none; padding: 5px 12px; border-radius: 7px; background: rgba(255,255,255,.14); font-size: 12px; transition: all .2s; }
     .side-logout:hover { background: rgba(255,255,255,.28); }
 
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 2px 8px rgba(51,60,63,.05); overflow: hidden; margin-bottom: 16px; }
-    .card-hd { padding: 14px 20px; border-bottom: 1px solid var(--border); font-size: 15px; font-weight: 600; color: var(--primary-dark); display: flex; align-items: center; }
-    .card-hd::before { content: ""; width: 4px; height: 14px; background: var(--primary); border-radius: 2px; margin-right: 8px; }
-    .card-bd { padding: 20px; }
+    /* ===== 顶部渐变横幅 ===== */
+    .hero {
+        position: relative; overflow: hidden;
+        background: linear-gradient(120deg, var(--primary-dark) 0%, var(--primary) 52%, #7F9499 100%);
+        border-radius: var(--radius); padding: 26px 30px; margin-bottom: 18px; color: #fff;
+        box-shadow: 0 8px 24px rgba(101,122,127,.25);
+    }
+    .hero::before { content: ""; position: absolute; right: -70px; top: -90px; width: 240px; height: 240px; border-radius: 50%; background: rgba(255,255,255,.08); }
+    .hero::after { content: ""; position: absolute; right: 46px; bottom: -100px; width: 180px; height: 180px; border-radius: 50%; background: rgba(184,107,116,.4); }
+    .hero .h-ic { position: relative; z-index: 1; width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,.18); display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 12px; }
+    .hero h1 { position: relative; z-index: 1; font-size: 22px; font-weight: 700; letter-spacing: 1px; }
+    .hero p { position: relative; z-index: 1; font-size: 13px; opacity: .88; margin-top: 6px; line-height: 1.7; }
 
-    .ver-row { display: flex; justify-content: space-between; align-items: center; padding: 13px 0; border-bottom: 1px dashed var(--border); font-size: 14px; }
+    /* ===== 卡片 ===== */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 6px 20px rgba(46,56,59,.06); overflow: hidden; margin-bottom: 16px; }
+    .card-hd { display: flex; align-items: center; gap: 10px; padding: 16px 22px; border-bottom: 1px solid var(--border); font-size: 15px; font-weight: 700; color: var(--primary-dark); }
+    .card-hd .ic { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .card-hd .ic.accent { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); }
+    .card-bd { padding: 24px 22px; }
+
+    .ver-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 4px; border-bottom: 1px dashed var(--border); font-size: 14px; }
     .ver-row:last-of-type { border-bottom: none; }
     .ver-row .k { color: var(--muted); font-size: 13px; }
-    .ver-row .v { font-weight: 600; color: var(--text); font-size: 15px; }
+    .ver-row .v { font-weight: 700; color: var(--text); font-size: 16px; }
+    .ver-chip { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .ver-chip.cur { background: rgba(101,122,127,.14); color: var(--primary-dark); }
+    .ver-chip.latest { background: rgba(78,154,110,.14); color: var(--ok); }
+    .ver-chip.accent { background: rgba(184,107,116,.14); color: var(--accent-dark); }
 
-    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; color: #fff; font-weight: 500; }
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; color: #fff; font-weight: 600; }
     .badge-ok { background: var(--ok); }
     .badge-update { background: var(--accent); }
     .badge-err { background: var(--danger); }
 
-    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
-    .btn { display: inline-block; padding: 10px 22px; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; text-decoration: none; color: #fff; background: var(--primary); transition: all .2s; }
-    .btn:hover { background: var(--primary-dark); }
-    .btn-accent { background: var(--accent); }
-    .btn-accent:hover { background: var(--accent-dark); }
-    .btn-ghost { background: transparent; color: var(--primary); border: 1px solid var(--primary); }
-    .btn-ghost:hover { background: rgba(101,122,127,.08); }
-
-    .log-item { padding: 12px 0; border-bottom: 1px dashed var(--border); }
+    .log-item { padding: 14px 4px; border-bottom: 1px dashed var(--border); }
     .log-item:last-of-type { border-bottom: none; }
-    .log-item .lv { font-size: 14px; font-weight: 600; color: var(--primary-dark); }
+    .log-item .lv { display: inline-block; font-size: 14px; font-weight: 700; color: var(--primary-dark); background: rgba(101,122,127,.1); padding: 2px 10px; border-radius: 6px; }
     .log-item .lt { font-size: 12px; color: var(--muted); margin-left: 8px; font-weight: 400; }
-    .log-item ul { margin: 6px 0 0 18px; }
+    .log-item ul { margin: 8px 0 0 20px; }
     .log-item li { font-size: 13px; color: #5B666A; line-height: 1.9; }
 
-    .tip { font-size: 12px; color: var(--muted); margin-top: 12px; line-height: 1.8; }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; padding-top: 18px; border-top: 1px dashed var(--border); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; height: 42px; padding: 0 26px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .2s; }
+    .btn-primary { color: #fff; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); box-shadow: 0 4px 12px rgba(101,122,127,.32); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(101,122,127,.4); }
+    .btn-accent { color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); box-shadow: 0 4px 12px rgba(184,107,116,.3); }
+    .btn-accent:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(184,107,116,.38); }
+    .btn-ghost { color: var(--primary); background: transparent; border: 1px solid var(--primary); }
+    .btn-ghost:hover { background: rgba(101,122,127,.08); }
+
+    .tip { font-size: 12px; color: var(--muted); margin-top: 14px; line-height: 1.8; }
 
     @media (max-width: 900px) {
         .shell { flex-direction: column; }
-        .side { width: 100%; min-height: 0; flex-direction: row; flex-wrap: wrap; align-items: center; }
+        .side { width: 100%; min-height: 0; position: static; flex-direction: row; flex-wrap: wrap; align-items: center; }
         .side-logo { flex: 1; border-bottom: none; margin-bottom: 0; text-align: left; }
         .side-nav { display: flex; gap: 6px; flex-wrap: wrap; }
+        .side-grp { display: none; }
         .side-item { margin-bottom: 0; }
         .side-foot { margin-top: 0; border-top: none; padding-top: 0; }
     }
@@ -106,9 +131,11 @@
             <div class="side-sub">MacCMS Addon</div>
         </div>
         <nav class="side-nav">
+            <div class="side-grp">功能设置</div>
             <a class="side-item {if condition="$active eq 'search'"}on{/if}" href="{:addon_url('mxgt/admin/search')}">搜索设置</a>
             <a class="side-item {if condition="$active eq 'match'"}on{/if}" href="{:addon_url('mxgt/admin/match')}">匹配设置</a>
             <a class="side-item {if condition="$active eq 'jsoncall'"}on{/if}" href="{:addon_url('mxgt/admin/jsoncall')}">JSON 调用</a>
+            <div class="side-grp">系统</div>
             <a class="side-item {if condition="$active eq 'index'"}on{/if}" href="{:addon_url('mxgt/admin/index')}">版本信息</a>
             <a class="side-item {if condition="$active eq 'config'"}on{/if}" href="{:addon_url('mxgt/admin/config')}">插件配置</a>
             <a class="side-item {if condition="$active eq 'update'"}on{/if}" href="{:addon_url('mxgt/admin/config')}#online-update">在线更新</a>
@@ -121,16 +148,21 @@
 
     <!-- 右侧内容 -->
     <main class="main">
-        <div class="page-hd">版本信息</div>
+        <div class="hero">
+            <div class="h-ic">📦</div>
+            <h1>版本信息</h1>
+            <p>当前插件版本与最新发行版对比，支持在线检查与一键更新。</p>
+        </div>
 
         <div class="card">
-            <div class="card-hd">当前版本与最新版本</div>
+            <div class="card-hd"><span class="ic">📊</span>当前版本与最新版本</div>
             <div class="card-bd">
-                <div class="ver-row"><span class="k">当前版本</span><span class="v">v{$version|default='0.0.16'}</span></div>
+                <div class="ver-row"><span class="k">当前版本</span><span class="v"><span class="ver-chip cur">v{$version|default='0.0.16'}</span></span></div>
                 <div class="ver-row">
                     <span class="k">最新版本</span>
                     <span class="v">
-                        {if condition="$vinfo.ok eq 1"}{$vinfo.remote_version}
+                        {if condition="$vinfo.ok eq 1"}
+                            <span class="ver-chip latest">{$vinfo.remote_version}</span>
                             {if condition="$vinfo.has_update eq 1"}<span class="badge badge-update" style="margin-left:8px;">发现新版本</span>{else /}<span class="badge badge-ok" style="margin-left:8px;">已是最新</span>{/if}
                         {else /}<span style="color:var(--danger);font-size:12px;font-weight:400;">{$vinfo.msg}</span>{/if}
                     </span>
@@ -148,7 +180,7 @@
         </div>
 
         <div class="card">
-            <div class="card-hd">更新日志</div>
+            <div class="card-hd"><span class="ic accent">📝</span>更新日志</div>
             <div class="card-bd">
                 <div class="log-item">
                     <span class="lv">v0.0.16</span><span class="lt">2026-09-15</span>
@@ -182,89 +214,6 @@
     </main>
 
 </div>
-
-<!-- 更新进度条（圆形进度环） -->
-<div class="update-mask" id="update-mask">
-    <div class="update-box">
-        <div class="upd-title" id="upd-title">正在在线更新...</div>
-        <div class="upd-msg" id="upd-msg">准备中</div>
-        <div class="upd-ring-wrap">
-            <svg class="upd-svg" width="120" height="120" viewBox="0 0 120 120">
-                <circle class="upd-track" cx="60" cy="60" r="52" fill="none" stroke="#E9EDEE" stroke-width="10"/>
-                <circle class="upd-bar" id="upd-ring" cx="60" cy="60" r="52" fill="none" stroke="url(#upd-grad)" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.73" stroke-dashoffset="326.73" transform="rotate(-90 60 60)"/>
-                <defs>
-                    <linearGradient id="upd-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stop-color="#B86B74"/>
-                        <stop offset="100%" stop-color="#657A7F"/>
-                    </linearGradient>
-                </defs>
-            </svg>
-            <div class="upd-percent" id="upd-percent">0%</div>
-        </div>
-    </div>
-</div>
-
-<style>
-    .update-mask { display: none; position: fixed; inset: 0; background: rgba(20,28,30,.5); z-index: 9999; align-items: center; justify-content: center; }
-    .update-box { background: #fff; border-radius: 12px; padding: 28px 32px; width: 340px; max-width: 90%; text-align: center; box-shadow: 0 10px 36px rgba(0,0,0,.28); }
-    .upd-title { font-size: 16px; font-weight: 600; color: #333C3F; margin-bottom: 10px; }
-    .upd-msg { font-size: 12px; color: #8A9599; margin-bottom: 16px; min-height: 18px; }
-    .upd-ring-wrap { position: relative; width: 120px; margin: 4px auto 12px; }
-    .upd-svg { display: block; }
-    .upd-svg .upd-track { transition: none; }
-    .upd-svg .upd-bar { transition: stroke-dashoffset .3s ease; }
-    .upd-percent { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: #657A7F; }
-</style>
-
-<script>
-    var UPDATE_URL = "{:addon_url('mxgt/admin/doUpdate')}";
-    var PROGRESS_URL = "{:addon_url('mxgt/admin/updateProgress')}";
-    var RELOAD_URL = "{:addon_url('mxgt/admin/index')}";
-
-    var RING_CIRC = 326.73; // 圆环周长 = 2π × 52
-
-    function setProgress(p, msg) {
-        p = p > 100 ? 100 : p;
-        var ring = document.getElementById('upd-ring');
-        if (ring) { ring.style.strokeDashoffset = RING_CIRC * (1 - p / 100); }
-        document.getElementById('upd-percent').textContent = p + '%';
-        document.getElementById('upd-msg').textContent = msg || '';
-    }
-
-    function startUpdate() {
-        if (!confirm('确定执行在线更新吗？更新前会自动备份当前代码。')) return;
-        var mask = document.getElementById('update-mask');
-        mask.style.display = 'flex';
-        setProgress(0, '准备中...');
-        var done = false;
-
-        var timer = setInterval(function () {
-            fetch(PROGRESS_URL).then(function (r) { return r.json(); }).then(function (d) {
-                if (done || !d) return;
-                if (d.step === 'error') {
-                    done = true; clearInterval(timer);
-                    setProgress(d.percent || 0, d.msg || '更新失败');
-                } else {
-                    setProgress(d.percent || 0, d.msg || '');
-                }
-            }).catch(function () {});
-        }, 600);
-
-        fetch(UPDATE_URL, { method: 'POST' }).then(function (r) { return r.json(); }).then(function (d) {
-            if (done) return;
-            done = true; clearInterval(timer);
-            if (d && d.code === 1) {
-                setProgress(100, d.msg || '更新完成');
-                setTimeout(function () { location.href = RELOAD_URL; }, 1500);
-            } else {
-                setProgress(0, (d && d.msg) ? d.msg : '更新失败，请重试');
-            }
-        }).catch(function () {
-            done = true; clearInterval(timer);
-            setProgress(0, '更新请求异常，请重试');
-        });
-    }
-</script>
 
 </body>
 </html>
