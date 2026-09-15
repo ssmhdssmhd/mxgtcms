@@ -42,6 +42,45 @@ class Admin extends Controller
             $this->redirect(addon_url('mxgt/admin/login'));
             exit;
         }
+
+        // 自愈：管理员每次进入插件页面时确保后台侧边栏快捷菜单存在
+        // （防止菜单文件被清空/覆盖/缓存导致苹果CMS后台侧边栏入口丢失）
+        $this->ensureQuickMenu();
+    }
+
+    /**
+     * 后台快捷菜单自愈：检查苹果CMS后台侧边栏「自定义菜单」中是否存在插件入口，
+     * 不存在则补注册（幂等），解决「后台没有侧边栏/菜单未生效」的问题。
+     */
+    protected function ensureQuickMenu()
+    {
+        $line = '沫兮官替官解系统,/index.php/addons/mxgt/admin/index';
+
+        $list = \think\Config::get('quickmenu');
+        if (!is_array($list)) {
+            $list = [];
+        }
+        // 兼容旧版 txt 存储，合并去重
+        $txtFile = APP_PATH . 'data' . DS . 'config' . DS . 'quickmenu.txt';
+        if (is_file($txtFile)) {
+            foreach (explode(chr(13), (string) @file_get_contents($txtFile)) as $l) {
+                $l = trim($l);
+                if ($l !== '') {
+                    $list[] = $l;
+                }
+            }
+        }
+        $list = array_values(array_filter(array_map('trim', $list), 'strlen'));
+        if (in_array($line, $list, true)) {
+            return; // 已存在
+        }
+        $list[] = $line;
+
+        if (function_exists('mac_arr2file')) {
+            @mac_arr2file(APP_PATH . 'extra' . DS . 'quickmenu.php', $list);
+        } else {
+            @file_put_contents($txtFile, implode(chr(13), $list));
+        }
     }
 
     /**
