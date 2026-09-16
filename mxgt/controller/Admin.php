@@ -46,6 +46,8 @@ class Admin extends Controller
         // 自愈：管理员每次进入插件页面时确保后台侧边栏快捷菜单存在
         // （防止菜单文件被清空/覆盖/缓存导致苹果CMS后台侧边栏入口丢失）
         $this->ensureQuickMenu();
+        // 自愈：确保根目录 static/addons/mxgt/ 存在背景图/Logo（缺失时自动从插件内置副本复制）
+        $this->ensureStatic();
     }
 
     /**
@@ -80,6 +82,26 @@ class Admin extends Controller
             @mac_arr2file(APP_PATH . 'extra' . DS . 'quickmenu.php', $list);
         } else {
             @file_put_contents($txtFile, implode(chr(13), $list));
+        }
+    }
+
+    /**
+     * 静态资源自愈：确保根目录 static/addons/mxgt/ 存在 bg.jpg 背景图与 logo.png。
+     * 若缺失则从插件内置副本（mxgt/static/addons/mxgt/）复制过去（幂等：文件已存在则不覆盖，
+     * 避免覆盖用户上传的自定义图片）。解决「后台横幅背景图未生效」的问题。
+     */
+    protected function ensureStatic()
+    {
+        $srcDir = dirname(__DIR__) . DS . 'static' . DS . 'addons' . DS . 'mxgt' . DS;
+        $dstDir = ROOT_PATH . 'static' . DS . 'addons' . DS . 'mxgt' . DS;
+        foreach (array('bg.jpg', 'logo.png') as $file) {
+            if (!is_file($srcDir . $file) || is_file($dstDir . $file)) {
+                continue;
+            }
+            if (!is_dir($dstDir)) {
+                @mkdir($dstDir, 0755, true);
+            }
+            @copy($srcDir . $file, $dstDir . $file);
         }
     }
 

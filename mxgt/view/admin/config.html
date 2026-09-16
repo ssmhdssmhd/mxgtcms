@@ -59,18 +59,16 @@
     /* ===== 顶部渐变横幅 ===== */
     .hero {
         position: relative; overflow: hidden;
-        background:
-            linear-gradient(120deg, rgba(46,56,59,.52) 0%, rgba(78,98,103,.42) 52%, rgba(127,148,153,.34) 100%),
-            url('__STATIC__/addons/mxgt/bg.jpg') center/cover no-repeat;
+        background: linear-gradient(120deg, var(--primary-dark) 0%, var(--primary) 52%, #7F9499 100%);
         border-radius: var(--radius); padding: 26px 30px; margin-bottom: 18px; color: #fff;
         box-shadow: 0 8px 24px rgba(101,122,127,.25);
     }
-    .hero::before { content: ""; position: absolute; right: -70px; top: -90px; width: 240px; height: 240px; border-radius: 50%; background: rgba(255,255,255,.06); }
-    .hero::after { content: ""; position: absolute; right: 46px; bottom: -100px; width: 180px; height: 180px; border-radius: 50%; background: rgba(255,255,255,.14); }
-    .hero .h-ic { position: relative; z-index: 1; width: 58px; height: 58px; border-radius: 14px; background: rgba(255,255,255,.95); box-shadow: 0 4px 14px rgba(0,0,0,.22); padding: 5px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+    .hero .hero-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
+    .hero .hero-mask { position: absolute; inset: 0; z-index: 1; background: linear-gradient(120deg, rgba(14,23,25,.58) 0%, rgba(14,23,25,.34) 55%, rgba(14,23,25,.26) 100%); }
+    .hero .h-ic { position: relative; z-index: 2; width: 58px; height: 58px; border-radius: 14px; background: rgba(255,255,255,.95); box-shadow: 0 4px 14px rgba(0,0,0,.22); padding: 5px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
     .hero .h-ic img { width: 100%; height: 100%; object-fit: contain; display: block; }
-    .hero h1 { position: relative; z-index: 1; font-size: 22px; font-weight: 700; letter-spacing: 1px; }
-    .hero p { position: relative; z-index: 1; font-size: 13px; opacity: .88; margin-top: 6px; line-height: 1.7; }
+    .hero h1 { position: relative; z-index: 2; font-size: 22px; font-weight: 700; letter-spacing: 1px; }
+    .hero p { position: relative; z-index: 2; font-size: 13px; opacity: .92; margin-top: 6px; line-height: 1.7; }
 
     /* ===== 卡片 ===== */
     .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 6px 20px rgba(46,56,59,.06); overflow: hidden; margin-bottom: 16px; max-width: 760px; }
@@ -144,6 +142,8 @@
     <!-- 右侧内容 -->
     <main class="main">
         <div class="hero">
+            <img class="hero-bg" src="__STATIC__/addons/mxgt/bg.jpg" alt="" onerror="this.style.display='none'">
+            <div class="hero-mask"></div>
             <div class="h-ic"><img src="__STATIC__/addons/mxgt/logo.png" alt="logo"></div>
             <h1>插件配置</h1>
             <p>更新源、仓库与插件登录等基础配置，与「搜索/匹配/JSON」独立设置页共用同一份配置存储。</p>
