@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>沫兮官替官解系统 - 匹配设置</title>
+<title>沫兮App控制系统 - App配置下发</title>
 <style>
     :root {
         --primary: #657A7F;
@@ -39,7 +39,6 @@
     .side-title { font-size: 15px; font-weight: 700; margin-top: 10px; letter-spacing: 1px; }
     .side-sub { font-size: 10px; opacity: .75; margin-top: 3px; letter-spacing: 1px; text-transform: uppercase; }
     .side-grp { font-size: 11px; color: rgba(255,255,255,.55); margin: 14px 6px 6px; letter-spacing: 1px; }
-    .side-grp:first-of-type { margin-top: 4px; }
     .side-item {
         display: flex; align-items: center; padding: 10px 13px; border-radius: 9px;
         color: rgba(255,255,255,.9); font-size: 13px; text-decoration: none;
@@ -77,31 +76,19 @@
     .card-hd .ic.accent { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); }
     .card-bd { padding: 24px 22px; }
 
-    /* ===== 表单 ===== */
-    .form-item { margin-bottom: 22px; }
-    .form-item .label { display: flex; align-items: center; font-size: 13.5px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
-    .form-item .label::before { content: ""; width: 3px; height: 13px; border-radius: 2px; background: var(--accent); margin-right: 8px; }
-    .form-item .tip { font-size: 12px; color: var(--muted); margin-top: 7px; line-height: 1.7; }
-    .input, .select, .textarea {
-        width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 9px;
-        font-size: 14px; background: #FBFCFC; color: var(--text); outline: none; transition: all .2s;
-        box-shadow: inset 0 1px 2px rgba(46,56,59,.04);
-    }
-    .input::placeholder, .textarea::placeholder { color: #B5BEC2; }
-    .input:focus, .select:focus, .textarea:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(101,122,127,.14); }
-    .select { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237C888C' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 38px; cursor: pointer; }
-    .textarea { height: 96px; resize: vertical; }
-
-    /* ===== 按钮 ===== */
-    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; padding-top: 20px; border-top: 1px dashed var(--border); }
-    .btn { display: inline-flex; align-items: center; justify-content: center; height: 42px; padding: 0 28px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .2s; }
-    .btn-primary { color: #fff; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); box-shadow: 0 4px 12px rgba(101,122,127,.32); }
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(101,122,127,.4); }
-    .btn-accent { color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); box-shadow: 0 4px 12px rgba(184,107,116,.3); }
-    .btn-accent:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(184,107,116,.38); }
+    .url-box { display: flex; align-items: center; gap: 10px; background: #F6F8F9; border: 1px dashed var(--border); border-radius: 10px; padding: 12px 16px; margin-top: 14px; }
+    .url-box code { flex: 1; font-size: 13px; color: var(--primary-dark); word-break: break-all; font-family: Menlo, Consolas, monospace; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; height: 38px; padding: 0 20px; border: none; border-radius: 9px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .2s; }
     .btn-ghost { color: var(--primary); background: transparent; border: 1px solid var(--primary); }
     .btn-ghost:hover { background: rgba(101,122,127,.08); }
-    .hint { font-size: 12px; color: var(--muted); margin-top: 16px; line-height: 1.9; }
+    .btn-accent { color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); box-shadow: 0 4px 12px rgba(184,107,116,.3); }
+    .btn-accent:hover { transform: translateY(-1px); }
+
+    pre.json { background: #2E383B; color: #D9E0E2; border-radius: 10px; padding: 18px 20px; font-size: 13px; line-height: 1.7; overflow: auto; font-family: Menlo, Consolas, monospace; margin-top: 6px; }
+    .tip { font-size: 12px; color: var(--muted); margin-top: 12px; line-height: 1.8; }
+    .stat { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .stat.on { background: rgba(78,154,110,.14); color: var(--ok); }
+    .stat.off { background: rgba(194,80,79,.14); color: var(--danger); }
 
     @media (max-width: 900px) {
         .shell { flex-direction: column; }
@@ -122,16 +109,13 @@
     <aside class="side">
         <div class="side-logo">
             <img src="__STATIC__/addons/mxgt/logo.png" alt="logo" onerror="this.style.display='none'">
-            <div class="side-title">沫兮官替官解系统</div>
-            <div class="side-sub">Match Settings</div>
+            <div class="side-title">沫兮App控制系统</div>
+            <div class="side-sub">App Config</div>
         </div>
         <nav class="side-nav">
-            <div class="side-grp">功能设置</div>
-            <a class="side-item {if condition="$active eq 'search'"}on{/if}" href="{:addon_url('mxgt/admin/search')}">搜索设置</a>
-            <a class="side-item {if condition="$active eq 'match'"}on{/if}" href="{:addon_url('mxgt/admin/match')}">匹配设置</a>
-            <a class="side-item {if condition="$active eq 'jsoncall'"}on{/if}" href="{:addon_url('mxgt/admin/jsoncall')}">JSON 调用</a>
             <div class="side-grp">系统</div>
             <a class="side-item {if condition="$active eq 'index'"}on{/if}" href="{:addon_url('mxgt/admin/index')}">版本信息</a>
+            <a class="side-item {if condition="$active eq 'appconfig'"}on{/if}" href="{:addon_url('mxgt/admin/appconfig')}">App配置下发</a>
             <a class="side-item {if condition="$active eq 'config'"}on{/if}" href="{:addon_url('mxgt/admin/config')}">插件配置</a>
             <a class="side-item {if condition="$active eq 'update'"}on{/if}" href="{:addon_url('mxgt/admin/update')}">在线更新</a>
         </nav>
@@ -147,48 +131,54 @@
             <img class="hero-bg" src="__STATIC__/addons/mxgt/bg.jpg" alt="" onerror="this.style.display='none'">
             <div class="hero-mask"></div>
             <div class="h-ic"><img src="__STATIC__/addons/mxgt/logo.png" alt="logo"></div>
-            <h1>匹配设置</h1>
-            <p>配置官替/官解匹配类型与规则，控制每次任务的处理数量，保存后即时生效。</p>
+            <h1>App 云端配置下发</h1>
+            <p>插件把采集接口、站源、解析、直播、播放器、公告等配置发布为 TVBoxOS 兼容 JSON，供 App 读取。</p>
         </div>
 
         <div class="card">
-            <div class="card-hd"><span class="ic accent">🔗</span>匹配设置</div>
+            <div class="card-hd"><span class="ic accent">🔗</span>下发接口地址</div>
             <div class="card-bd">
-                <form method="post" action="{:addon_url('mxgt/admin/match')}">
-                    {foreach name="config" item="item"}
-                    <div class="form-item">
-                        <label class="label">{$item.title}</label>
-                        {switch name="item.type"}
-                        {case value="select"}
-                        <select name="row[{$item.name}]" class="select">
-                            {foreach name="item.content" item="opt" key="optKey"}
-                            <option value="{$optKey}" {if condition="$item['value'] eq $optKey"}selected{/if}>{$opt}</option>
-                            {/foreach}
-                        </select>
-                        {/case}
-                        {case value="textarea"}
-                        <textarea name="row[{$item.name}]" class="textarea" placeholder="{$item.tip}">{$item.value}</textarea>
-                        {/case}
-                        {case value="number"}
-                        <input type="number" name="row[{$item.name}]" class="input" value="{$item.value}">
-                        {/case}
-                        {default /}
-                        <input type="text" name="row[{$item.name}]" class="input" placeholder="{$item.tip}" value="{$item.value}">
-                        {/switch}
-                        {if condition="!empty($item['tip'])"}<div class="tip">{$item.tip}</div>{/if}
-                    </div>
-                    {/foreach}
-                    <div class="actions">
-                        <button type="submit" class="btn btn-primary">保存配置</button>
-                        <a class="btn btn-ghost" href="{:addon_url('mxgt/admin/index')}">返回首页</a>
-                    </div>
-                </form>
-                <div class="hint">提示：匹配设置为官替/官解核心能力预留的匹配类型与规则配置，与「插件配置」共用同一份配置存储，任意入口保存互相同步。</div>
+                <p>将下方地址填入 App 的「配置地址 / 设置接口」，App 启动时即拉取本插件下发的配置来控制各功能。</p>
+                {if condition="isset($config.app_config_enable) && $config.app_config_enable eq '0'"}
+                <br><span class="stat off">当前配置下发已停用，请在「插件配置」中启用</span>
+                {else /}
+                <br><span class="stat on">配置下发已启用</span>
+                {/if}
+                <div class="url-box">
+                    <code id="app-config-url">{$app_config_url}</code>
+                    <button class="btn btn-ghost" onclick="copyUrl()">复制</button>
+                    <a class="btn btn-accent" href="{$app_config_url}" target="_blank">打开</a>
+                </div>
+                <div class="tip">提示：在「插件配置」切换「启用 App 配置下发」，并填写采集接口(Spider)、站点(Sites)、解析(Parses)、直播(Lives)、播放器、壁纸、公告、APK 更新地址后保存，下方 JSON 即会同步更新。</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-hd"><span class="ic">📦</span>下发的配置 JSON（预览）</div>
+            <div class="card-bd">
+                <pre class="json">{$app_config_json}</pre>
             </div>
         </div>
     </main>
-
 </div>
 
+<script>
+function copyUrl() {
+    var box = document.getElementById('app-config-url');
+    if (!box) return;
+    var range = document.createRange();
+    range.selectNodeContents(box);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    try {
+        document.execCommand('copy');
+        alert('已复制下发接口地址');
+    } catch (e) {
+        alert('复制失败，请手动复制');
+    }
+    sel.removeAllRanges();
+}
+</script>
 </body>
 </html>

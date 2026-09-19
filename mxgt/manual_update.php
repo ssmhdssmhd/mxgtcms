@@ -1,6 +1,6 @@
 <?php
 /**
- * 沫兮官替官解系统 - 手动更新脚本
+ * 沫兮App控制系统 - 手动更新脚本
  *
  * 当后台「在线更新」（自动更新）无法运行时（如页面打不开、鉴权异常、网络受限等），
  * 可使用本脚本手动从当前 GitHub 仓库拉取最新发行版并覆盖更新 addons/mxgt 与 mxthxt，
@@ -63,7 +63,7 @@ foreach ($argv as $a) {
         case '-y':      $yes = true; break;
         case '--help':
         case '-h':
-            out(basename(__FILE__) . ' 手动更新脚本帮助（沫兮官替官解系统）');
+            out(basename(__FILE__) . ' 手动更新脚本帮助（沫兮App控制系统）');
             out('  无参数        : 检查并更新到最新发行版（会确认）');
             out('  --yes / -y    : 跳过交互确认，直接更新');
             out('  --force       : 忽略“已是最新”，强制重新拉取最新发行版覆盖');
@@ -117,7 +117,7 @@ foreach ($ref as $cfgFile) {
     }
 }
 
-out('========== 沫兮官替官解系统 - 手动更新 ==========');
+out('========== 沫兮App控制系统 - 手动更新 ==========');
 out('根目录      : ' . ROOT_PATH);
 out('本地版本    : ' . ($localVersion !== '' ? 'v' . $localVersion : '（未读取到，请确认插件已安装）'));
 out('更新源      : ' . $source);

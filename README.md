@@ -1,9 +1,9 @@
-# 沫兮官替官解系统（mxgtcms）
+# 沫兮App控制系统（mxgtcms）
 
-> 项目名称：沫兮官替官解系统
+> 项目名称：沫兮App控制系统
 > 项目代号：mxgtcms
-> 当前版本：v0.0.25
-> 更新日期：2026-09-15
+> 当前版本：v0.0.26
+> 更新日期：2026-09-19
 
 ---
 
@@ -173,6 +173,7 @@ https://github.com/ssmhdssmhd/mxgtcms/releases
 
 | 版本 | 更新包文件名 | 发布时间 | 更新说明 | 下载 |
 | ---- | ---- | ---- | ---- | ---- |
+| v0.0.26 | `mxgtcms.v0.0.26.202609190000.zip` | 2026-09-19 | 精简核心：移除官替官解（搜索/匹配/JSON调用）与独立接口，仅保留在线更新/配置/登录；重定位为「沫兮App控制系统」；新增 App 云端配置下发（采集接口/播放器/公告等，TVBoxOS 兼容 JSON 接口）；配套 MXAPP 仓库 | Releases 页 |
 | v0.0.25 | `mxgtcms.v0.0.25.202609160017.zip` | 2026-09-15 | 修复横幅背景图未生效：苹果CMS不替换 CSS url() 内 __STATIC__，改用 <img> 铺底方案 + 根 static 资源自动部署自愈；插件内置静态副本 | Releases 页 |
 | v0.0.24 | `mxgtcms.v0.0.24.202609152334.zip` | 2026-09-15 | 修复苹果CMS后台侧边栏入口丢失/未生效（快捷菜单自愈）；顶部横幅改用背景图铺满，图标位换用 logo.png 合适尺寸（内容不变） | Releases 页 |
 | v0.0.23 | `mxgtcms.v0.0.23 202609152355.zip` | 2026-09-15 | 「在线更新」从插件配置页拆分为独立页面（侧边栏直达），配置页恢复单栏不再拥挤 | Releases 页 |
@@ -218,6 +219,17 @@ https://github.com/ssmhdssmhd/mxgtcms/releases
 ---
 
 ## 五、版本更新日志
+
+### v0.0.26（2026-09-19）
+- **精简核心，重定位为「沫兮App控制系统」**：
+  - 移除原「官替官解」的搜索设置（search_*）、匹配设置（match_*）、JSON 调用（json_*）及 `api_url` 独立接口配置，删除对应页面与控制器方法，仅保留**在线更新 / 插件配置 / 登录**。
+  - 变更插件标题为「沫兮App控制系统」（info.ini、侧边栏、快捷菜单、各页面标题同步）。
+- **新增「App配置下发」能力**：
+  - 插件后台可设置**采集接口(Spider)、采集站点(Sites)、解析(Parses)、直播(Lives)、默认播放器、壁纸、公告、APK 更新地址**（`app_*` 配置项）。
+  - 新增独立页面「App配置下发」（`/index.php/addons/mxgt/admin/appconfig`）：展示下发接口地址与生成的 TVBoxOS 兼容配置 JSON 预览。
+  - 新增前台接口 `/index.php/addons/mxgt/index/config`，App 将该地址填入「配置地址」即可读取插件下发的配置，从而由插件控制 App 的采集接口、播放器、公告等功能。
+  - 下发的 JSON 与 TVBoxOS(tvbox) 配置格式兼容（spider/sites/parses/lives/wallpaper 等字段），并支持 `playerType` 下发到站点源、`announcement` 公告、`update.apk` 更新地址扩展字段。
+- **配套 MXAPP 仓库**：从 [TVBoxOS](https://github.com/q215613905/TVBoxOS) 获取 App 源码成立「沫兮 App（MXAPP）」仓库，配套 GitHub Actions 云端打包 apk，并由本插件下发配置进行控制（详见仓库 README）。
 
 ### v0.0.25（2026-09-15）
 - **修复横幅背景图未生效**：

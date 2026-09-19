@@ -1,6 +1,6 @@
 <?php
 /**
- * 沫兮官替官解系统 - 插件入口
+ * 沫兮App控制系统 - 插件入口
  *
  * 新版苹果CMS（fastadmin-addons 规范）要求插件目录 addons/mxgt/ 内必须存在
  * 主入口文件 Mxgt.php 与元信息文件 info.ini，后台才能识别、启用与卸载。
@@ -168,7 +168,7 @@ class Mxgt extends \think\Addons
      */
     private function menuLine()
     {
-        return '沫兮官替官解系统,/index.php/addons/mxgt/admin/index';
+        return '沫兮App控制系统,/index.php/addons/mxgt/admin/index';
     }
 
     /**
@@ -232,7 +232,7 @@ class Mxgt extends \think\Addons
                 `update_time` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '更新时间',
                 PRIMARY KEY (`id`),
                 UNIQUE KEY `uk_meta_key` (`meta_key`)
-            ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COMMENT='沫兮官替官解系统-元数据表'");
+            ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COMMENT='沫兮App控制系统-元数据表'");
 
             $row = Db::name('mxgt_meta')->where('meta_key', 'installed_at')->find();
             if (empty($row)) {

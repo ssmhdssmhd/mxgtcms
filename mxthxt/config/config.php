@@ -1,6 +1,6 @@
 <?php
 /**
- * 沫兮官替官解系统 - 云端更新配置
+ * 沫兮App控制系统 - 云端更新配置
  * 本文件位于苹果CMS根目录/mxthxt/config/config.php
  * 部署后按需修改为实际 GitHub 仓库地址。
  */

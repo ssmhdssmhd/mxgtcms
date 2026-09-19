@@ -1,6 +1,9 @@
 # 本地工具产物（不入库）
 .trae-html-share-packages/
 
+# MXAPP 独立仓库（沫兮App前台，使用独立 git 仓库，避免被本仓库纳入）
+MXAPP/
+
 # 发布压缩包（构建产物，不入库）
 release/
 

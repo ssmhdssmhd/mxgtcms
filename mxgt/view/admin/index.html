@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>沫兮官替官解系统 - 版本信息</title>
+<title>沫兮App控制系统 - 版本信息</title>
 <style>
     :root {
         --primary: #657A7F;
@@ -128,21 +128,18 @@
     <aside class="side">
         <div class="side-logo">
             <img src="__STATIC__/addons/mxgt/logo.png" alt="logo" onerror="this.style.display='none'">
-            <div class="side-title">沫兮官替官解系统</div>
+            <div class="side-title">沫兮App控制系统</div>
             <div class="side-sub">MacCMS Addon</div>
         </div>
         <nav class="side-nav">
-            <div class="side-grp">功能设置</div>
-            <a class="side-item {if condition="$active eq 'search'"}on{/if}" href="{:addon_url('mxgt/admin/search')}">搜索设置</a>
-            <a class="side-item {if condition="$active eq 'match'"}on{/if}" href="{:addon_url('mxgt/admin/match')}">匹配设置</a>
-            <a class="side-item {if condition="$active eq 'jsoncall'"}on{/if}" href="{:addon_url('mxgt/admin/jsoncall')}">JSON 调用</a>
             <div class="side-grp">系统</div>
             <a class="side-item {if condition="$active eq 'index'"}on{/if}" href="{:addon_url('mxgt/admin/index')}">版本信息</a>
+            <a class="side-item {if condition="$active eq 'appconfig'"}on{/if}" href="{:addon_url('mxgt/admin/appconfig')}">App配置下发</a>
             <a class="side-item {if condition="$active eq 'config'"}on{/if}" href="{:addon_url('mxgt/admin/config')}">插件配置</a>
             <a class="side-item {if condition="$active eq 'update'"}on{/if}" href="{:addon_url('mxgt/admin/update')}">在线更新</a>
         </nav>
         <div class="side-foot">
-            <span>v{$version|default='0.0.25'}</span>
+            <span>v{$version|default='0.0.26'}</span>
             <a class="side-logout" href="{:addon_url('mxgt/admin/logout')}">退出登录</a>
         </div>
     </aside>
@@ -160,7 +157,7 @@
         <div class="card">
             <div class="card-hd"><span class="ic">📊</span>当前版本与最新版本</div>
             <div class="card-bd">
-                <div class="ver-row"><span class="k">当前版本</span><span class="v"><span class="ver-chip cur">v{$version|default='0.0.25'}</span></span></div>
+                <div class="ver-row"><span class="k">当前版本</span><span class="v"><span class="ver-chip cur">v{$version|default='0.0.26'}</span></span></div>
                 <div class="ver-row">
                     <span class="k">最新版本</span>
                     <span class="v">
@@ -185,6 +182,13 @@
         <div class="card">
             <div class="card-hd"><span class="ic accent">📝</span>更新日志</div>
             <div class="card-bd">
+                <div class="log-item">
+                    <span class="lv">v0.0.26</span><span class="lt">2026-09-19</span>
+                    <ul>
+                        <li>精简重生为「沫兮App控制系统」：移除官替/官解（搜索/匹配/JSON调用）与独立接口配置，仅保留在线更新/插件配置/登录。</li>
+                        <li>新增「App配置下发」：插件可设置采集接口、站源、解析、直播、播放器、壁纸、公告与APK更新地址，对外提供 TVBoxOS 兼容 JSON 接口供 App 读取。</li>
+                    </ul>
+                </div>
                 <div class="log-item">
                     <span class="lv">v0.0.25</span><span class="lt">2026-09-15</span>
                     <ul>

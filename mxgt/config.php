@@ -1,14 +1,18 @@
 <?php
 /**
- * 沫兮官替官解系统 - 配置项定义
+ * 沫兮App控制插件 - 配置项定义
  *
  * 新版苹果CMS（fastadmin-addons）配置机制：
  * - 后台「应用插件 → 设置」依据本文件渲染表单并保存（写回本文件）；
  * - 插件页面通过 get_addon_config('mxgt') 读取，模板中可直接使用 {$config.xxx}。
  * select/radio 的选项存放在 content 键（value => label）。
+ *
+ * 本插件精简为核心：仅保留「在线更新 / 插件配置 / App 云端配置下发」。
+ * 已移除原「官替官解」的搜索、匹配、JSON 调用等接口（search_*、match_*、json_*）。
  */
 
 return [
+    // ===== 在线更新 =====
     [
         'title' => '更新源',
         'name' => 'update_source',
@@ -35,13 +39,7 @@ return [
         'value' => '',
         'tip' => '更新源选择「自定义源」时填写，例如：https://example.com/mxgt/update.php',
     ],
-    [
-        'title' => 'API 接口地址',
-        'name' => 'api_url',
-        'type' => 'string',
-        'value' => '',
-        'tip' => '官替/官解核心功能使用的接口地址（后续迭代开放）。',
-    ],
+    // ===== 插件登录 =====
     [
         'title' => '插件登录账号',
         'name' => 'login_user',
@@ -56,105 +54,75 @@ return [
         'value' => 'admin888',
         'tip' => '插件独立登录密码。用户名与密码同时为空时跳过插件登录。',
     ],
-    // ===== 搜索设置（search_*，独立设置页「搜索设置」） =====
+    // ===== App 云端配置下发（app_*） =====
     [
-        'title' => '启用搜索',
-        'name' => 'search_enable',
+        'title' => '启用 App 配置下发',
+        'name' => 'app_config_enable',
         'type' => 'select',
         'value' => '1',
         'content' => ['1' => '启用', '0' => '停用'],
-        'tip' => '是否启用官方搜索功能。',
+        'tip' => '是否开放 App 云端配置接口。App 将该接口地址填入「配置地址」即可读取下方配置来控制采集接口、播放器、公告等功能。',
     ],
     [
-        'title' => '搜索接口地址',
-        'name' => 'search_url',
+        'title' => '采集接口(Spider)地址',
+        'name' => 'app_spider',
         'type' => 'string',
         'value' => '',
-        'tip' => '搜索接口地址，支持 {keyword} 占位符，例如：https://api.example.com/search?wd={keyword}',
+        'tip' => 'App 使用的采集接口(Spider/Jar) 地址，如 https://example.com/spider.jar，对应配置 JSON 的 spider 字段。',
     ],
     [
-        'title' => '请求参数模板',
-        'name' => 'search_params',
-        'type' => 'string',
-        'value' => 'wd={keyword}&page={page}',
-        'tip' => '请求参数模板，可用占位符：{keyword}（关键词）、{page}（页码）。',
-    ],
-    [
-        'title' => '每次返回条数',
-        'name' => 'search_limit',
-        'type' => 'number',
-        'value' => '20',
-        'tip' => '搜索接口单次返回的最大条数。',
-    ],
-    [
-        'title' => '请求超时（秒）',
-        'name' => 'search_timeout',
-        'type' => 'number',
-        'value' => '10',
-        'tip' => '搜索请求的超时时间。',
-    ],
-    // ===== 匹配设置（match_*，独立设置页「匹配设置」） =====
-    [
-        'title' => '启用匹配',
-        'name' => 'match_enable',
-        'type' => 'select',
-        'value' => '1',
-        'content' => ['1' => '启用', '0' => '停用'],
-        'tip' => '是否启用官替/官解匹配处理。',
-    ],
-    [
-        'title' => '匹配类型',
-        'name' => 'match_type',
-        'type' => 'select',
-        'value' => 'replace',
-        'content' => [
-            'replace' => '官替（官方替换）',
-            'parse' => '官解（官方解析）',
-        ],
-        'tip' => '匹配处理类型：官替用于官方接口替换，官解用于官方解析。',
-    ],
-    [
-        'title' => '匹配规则',
-        'name' => 'match_rule',
+        'title' => '采集站点(Sites)',
+        'name' => 'app_sites',
         'type' => 'textarea',
         'value' => '',
-        'tip' => '匹配规则内容，支持正则规则或 JSON 规则（按实际接口格式填写）。',
+        'tip' => '采集站点源，JSON 数组，如 [{"key":"cn","name":"站点","type":3,"api":"https://...","searchable":1}]。留空则不下发 sites。',
     ],
     [
-        'title' => '每次匹配数量',
-        'name' => 'match_limit',
-        'type' => 'number',
-        'value' => '10',
-        'tip' => '单次任务处理的最大匹配数量。',
+        'title' => '解析地址(Parses)',
+        'name' => 'app_parses',
+        'type' => 'textarea',
+        'value' => '',
+        'tip' => '视频解析地址，JSON 数组，如 [{"name":"解析","url":"https://...","type":0}]。留空则不下发 parses。',
     ],
-    // ===== JSON 调用（json_*，独立设置页「JSON 调用」） =====
     [
-        'title' => '启用 JSON 调用',
-        'name' => 'json_enable',
+        'title' => '直播源(Lives)',
+        'name' => 'app_lives',
+        'type' => 'textarea',
+        'value' => '',
+        'tip' => '直播源，可为文本直播源地址或 JSON 数组。留空则不下发 lives。',
+    ],
+    [
+        'title' => '默认播放器类型',
+        'name' => 'app_player',
         'type' => 'select',
-        'value' => '1',
-        'content' => ['1' => '启用', '0' => '停用'],
-        'tip' => '是否启用 JSON 接口调用能力。',
+        'value' => 'auto',
+        'content' => [
+            'auto' => '默认（由 App 自行选择）',
+            '0' => '系统播放器',
+            '1' => 'IJK 播放器',
+            '2' => 'EXO 播放器',
+        ],
+        'tip' => '控制 App 默认使用的播放器类型。',
     ],
     [
-        'title' => 'JSON 接口地址',
-        'name' => 'json_url',
+        'title' => '壁纸地址',
+        'name' => 'app_wallpaper',
         'type' => 'string',
         'value' => '',
-        'tip' => 'JSON 接口地址，支持 {keyword} 等占位符，例如：https://api.example.com/json?kw={keyword}',
+        'tip' => 'App 首页壁纸图片地址，对应配置 JSON 的 wallpaper 字段。',
     ],
     [
-        'title' => '调用密钥',
-        'name' => 'json_key',
+        'title' => '公告内容',
+        'name' => 'app_announcement',
+        'type' => 'textarea',
+        'value' => '',
+        'tip' => 'App 启动公告/通知内容（纯文本或富文本 HTML）。留空则不下发公告。',
+    ],
+    [
+        'title' => 'App 更新地址(APK)',
+        'name' => 'app_update_url',
         'type' => 'string',
         'value' => '',
-        'tip' => '调用凭证/密钥参数（留空则不传）。',
-    ],
-    [
-        'title' => '请求超时（秒）',
-        'name' => 'json_timeout',
-        'type' => 'number',
-        'value' => '10',
-        'tip' => 'JSON 接口请求超时时间。',
+        'tip' => 'App 新版本安装包(APK)下载地址，供 App 检测更新使用。留空则不下发。',
     ],
 ];
